@@ -54,7 +54,7 @@
   },
 
   "holes": [
-    { "nine": "out", "hole": 1,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
+    { "nine": "out", "hole": 1,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "images/hole01.jpg" },
     { "nine": "out", "hole": 2,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
     { "nine": "out", "hole": 3,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
     { "nine": "out", "hole": 4,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },

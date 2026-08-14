@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import datetime as _dt
+import os
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen.canvas import Canvas
 
@@ -15,6 +17,8 @@ from .course import Course, Hole, bogey_plan, general_keys
 
 PAGE_W, PAGE_H = A4
 MARGIN = 14 * mm
+
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 C_INK = HexColor("#1E2A22")
 C_MUTED = HexColor("#6B7A6E")
@@ -440,15 +444,22 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
             c.setFillColor(C_INK)
             c.drawCentredString(cx, bar_y + 3.6 * mm, value)
 
-    # 좌: 도면 / 우: 텍스트
+    # 좌: 도면 / 우: 텍스트. 실제 코스안내도가 있으면 왼쪽 단을 넓혀 위아래로 쌓는다.
     col_gap = 8 * mm
-    diag_w = (PAGE_W - 2 * MARGIN) * 0.33
-    text_x = MARGIN + diag_w + col_gap
+    img_path = _image_path(hole)
+    left_w = (PAGE_W - 2 * MARGIN) * (0.42 if img_path else 0.33)
+    text_x = MARGIN + left_w + col_gap
     text_w = PAGE_W - MARGIN - text_x
-    diag_h = 172 * mm
-    diag_y = bar_y - 8 * mm - diag_h
+    col_h = 172 * mm
+    diag_y = bar_y - 8 * mm - col_h
 
-    diagram.draw_hole(c, MARGIN, diag_y, diag_w, diag_h, hole, tee_key)
+    if img_path:
+        img_h = col_h * 0.52
+        used = _draw_course_map(c, MARGIN, diag_y + col_h - img_h, left_w, img_h, img_path)
+        sch_h = col_h - used - 8 * mm
+        diagram.draw_hole(c, MARGIN, diag_y, left_w, sch_h, hole, tee_key)
+    else:
+        diagram.draw_hole(c, MARGIN, diag_y, left_w, col_h, hole, tee_key)
 
     y = bar_y - 10 * mm
 
@@ -560,6 +571,44 @@ def log_page(c: Canvas, course: Course) -> None:
 # --------------------------------------------------------------------------
 # 공통 파츠
 # --------------------------------------------------------------------------
+
+def _image_path(hole: Hole) -> str | None:
+    """홀에 지정된 실제 코스안내도 이미지 경로. 없거나 파일이 없으면 None."""
+    raw = (hole.image or "").strip()
+    if not raw:
+        return None
+    path = raw if os.path.isabs(raw) else os.path.join(_REPO_ROOT, raw)
+    return path if os.path.isfile(path) else None
+
+
+def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: str) -> float:
+    """코스안내도 이미지를 비율 유지해 넣고, 실제로 사용한 높이를 돌려준다."""
+    try:
+        reader = ImageReader(path)
+        iw, ih = reader.getSize()
+    except Exception as exc:  # 손상된 파일 등
+        c.setFont(fonts.regular(), 7)
+        c.setFillColor(C_RED)
+        c.drawString(x, y + h - 10, f"이미지를 읽을 수 없습니다: {os.path.basename(path)} ({exc})")
+        return h
+
+    cap_h = 9
+    box_h = h - cap_h
+    scale = min(w / iw, box_h / ih)
+    dw, dh = iw * scale, ih * scale
+    dx = x + (w - dw) / 2
+    dy = y + h - dh
+
+    c.drawImage(reader, dx, dy, dw, dh, preserveAspectRatio=True, anchor="n", mask="auto")
+    c.setStrokeColor(C_LINE)
+    c.setLineWidth(0.6)
+    c.rect(dx, dy, dw, dh, stroke=1, fill=0)
+
+    c.setFont(fonts.regular(), 6)
+    c.setFillColor(C_MUTED)
+    c.drawString(x + 1, dy - 7, "실제 코스안내도 (골프장 제공)")
+    return dh + cap_h
+
 
 def _round_grid(c: Canvas, course: Course, x0: float, y: float, w: float) -> float:
     """18홀 기록 그리드를 그리고 아래쪽 y를 돌려준다."""

@@ -25,8 +25,21 @@ pip install -r requirements.txt
 
 python build.py                                  # data/bugok_cc.json -> out/부곡CC_야디지북.pdf
 python build.py --tee blue                       # 기준 티 변경 (black/blue/white/red)
+python build.py --holes 1 --out out/1번홀_샘플.pdf # 일부 홀만 (1 / 1-3 / 1,5,9)
 python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 ```
+
+## 실제 코스안내도 넣기
+
+홀에 `"image"` 를 지정하면 골프장이 제공하는 **실제 코스안내도**가 페이지 왼쪽 위에 들어가고,
+그 아래에 거리 마커·랜딩존이 표시된 전략 개략도가 함께 붙습니다.
+
+```jsonc
+{ "hole": 1, "image": "images/hole01.jpg", ... }
+```
+
+이미지를 `images/` 에 저장하고 경로만 맞추면 됩니다. 파일이 없으면 개략도만 그립니다.
+자세한 내용은 [images/README.md](images/README.md) 참고.
 
 ## ⚠️ 거리 데이터는 직접 채워야 합니다
 
@@ -56,7 +69,8 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
   ],
   "keys": ["코너를 질러가면 OB. 좌측 벙커 앞까지만 끊는다"],   // 공략 포인트(직접 작성)
   "bogey_plan": [],           // 비워 두면 거리에서 자동 계산
-  "note": ""
+  "note": "",
+  "image": "images/hole01.jpg" // 실제 코스안내도(선택)
 }
 ```
 

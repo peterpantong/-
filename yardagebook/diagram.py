@@ -126,14 +126,25 @@ def draw_hole(
     xs = [p[0] for p in pts]
     span_m = (max(xs) - min(xs)) + FAIRWAY_W + 2 * ROUGH_W + 8
     depth_m = length * 1.10
-    scale = min(w / span_m, h / depth_m)
 
-    cx = x + w / 2 - ((min(xs) + max(xs)) / 2) * scale
-    # 짧은 홀에서 도면이 아래로 쏠리지 않도록 세로 가운데 정렬
-    cy = y + max(h * 0.04, (h - depth_m * scale) / 2)
+    # 가로로 납작한 영역이면 홀을 눕혀 그린다 (티 왼쪽 -> 그린 오른쪽).
+    horiz = w / h > 1.15
+    if horiz:
+        # 홀이 페이지 오른쪽을 향하므로, 플레이어 기준 오른쪽(+x)은 페이지 아래(-y)가 된다.
+        scale = min(w / depth_m, h / span_m)
+        cx = x + max(w * 0.04, (w - depth_m * scale) / 2)
+        cy = y + h / 2 + ((min(xs) + max(xs)) / 2) * scale
 
-    def P(mx: float, my: float) -> tuple[float, float]:
-        return (cx + mx * scale, cy + my * scale)
+        def P(mx: float, my: float) -> tuple[float, float]:
+            return (cx + my * scale, cy - mx * scale)
+    else:
+        scale = min(w / span_m, h / depth_m)
+        cx = x + w / 2 - ((min(xs) + max(xs)) / 2) * scale
+        # 짧은 홀에서 도면이 아래로 쏠리지 않도록 세로 가운데 정렬
+        cy = y + max(h * 0.04, (h - depth_m * scale) / 2)
+
+        def P(mx: float, my: float) -> tuple[float, float]:
+            return (cx + mx * scale, cy + my * scale)
 
     c.saveState()
     c.setLineJoin(1)
@@ -162,17 +173,17 @@ def draw_hole(
 
     if has_data:
         # 거리 마커 (그린 기준 100/150/200m) — 랜딩존과 겹치는 것은 건너뛴다
-        _draw_distance_marks(c, pts, length, P, scale, avoid=landing)
+        _draw_distance_marks(c, pts, length, P, scale, horiz, avoid=landing)
 
     # 해저드
     for hz in hole.hazards:
-        _draw_hazard(c, hz, pts, length, P, scale)
+        _draw_hazard(c, hz, pts, length, P, scale, horiz)
 
     # 그린
-    _draw_green(c, hole, pts, P, scale)
+    _draw_green(c, hole, pts, P, scale, horiz)
 
     # 티박스
-    _draw_tee(c, pts, P, scale)
+    _draw_tee(c, pts, P, scale, horiz)
 
     # 랜딩존
     if landing is not None:
@@ -239,7 +250,7 @@ def _draw_carry_line(c, pts, P) -> None:
     c.setDash()
 
 
-def _draw_distance_marks(c, pts, length, P, scale, avoid: float | None = None) -> None:
+def _draw_distance_marks(c, pts, length, P, scale, horiz, avoid: float | None = None) -> None:
     c.setFont(fonts.bold(), 5.4)
     for to_green in (100, 150, 200, 250):
         d = length - to_green
@@ -267,7 +278,7 @@ def _draw_distance_marks(c, pts, length, P, scale, avoid: float | None = None) -
         c.drawCentredString(bx, by - 1.9, str(to_green))
 
 
-def _draw_hazard(c, hz, pts, length, P, scale) -> None:
+def _draw_hazard(c, hz, pts, length, P, scale, horiz) -> None:
     # 미터 공간의 +x 는 페이지 오른쪽. offset_polyline(+d) 도 오른쪽으로 밀린다.
     side_sign = {"left": -1.0, "right": 1.0, "center": 0.0}.get(hz.side, 0.0)
     if hz.side.startswith("greenside"):
@@ -314,8 +325,9 @@ def _draw_hazard(c, hz, pts, length, P, scale) -> None:
     cxp, cyp = P(px, py)
 
     long_m = max(14.0, abs(end - start))
-    rx = (long_m / 2) * scale
-    ry = 7.5 * scale
+    along = (long_m / 2) * scale      # 홀 진행 방향 반경
+    across = 7.5 * scale              # 좌우 방향 반경
+    ex, ey = (along, across) if horiz else (across, along)
 
     if hz.type == "water":
         c.setFillColor(C_WATER)
@@ -327,15 +339,16 @@ def _draw_hazard(c, hz, pts, length, P, scale) -> None:
         c.setFillColor(C_SAND)
         c.setStrokeColor(C_SAND_EDGE)
     c.setLineWidth(0.5)
-    c.ellipse(cxp - ry, cyp - rx, cxp + ry, cyp + rx, stroke=1, fill=1)
+    c.ellipse(cxp - ex, cyp - ey, cxp + ex, cyp + ey, stroke=1, fill=1)
 
 
-def _draw_green(c, hole, pts, P, scale) -> None:
+def _draw_green(c, hole, pts, P, scale, horiz) -> None:
     gx, gy, ang = pts[-1][0], pts[-1][1], math.pi / 2
     depth = float(hole.green.get("depth", 26) or 26)
     width = float(hole.green.get("width", 24) or 24)
     cxp, cyp = P(gx, gy)
-    rx, ry = (width / 2) * scale, (depth / 2) * scale
+    across, along = (width / 2) * scale, (depth / 2) * scale
+    rx, ry = (along, across) if horiz else (across, along)
 
     c.setFillColor(C_GREEN)
     c.setStrokeColor(C_GREEN_EDGE)
@@ -355,10 +368,10 @@ def _draw_green(c, hole, pts, P, scale) -> None:
     c.drawPath(p, stroke=0, fill=1)
 
 
-def _draw_tee(c, pts, P, scale) -> None:
+def _draw_tee(c, pts, P, scale, horiz) -> None:
     tx, ty = P(0, 0)
-    w = 13 * scale
-    h = 7 * scale
+    across, along = 13 * scale, 7 * scale
+    w, h = (along, across) if horiz else (across, along)
     c.setFillColor(C_TEE)
     c.setStrokeColor(HexColor("#FFFFFF"))
     c.setLineWidth(0.5)

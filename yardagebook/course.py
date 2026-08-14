@@ -71,6 +71,7 @@ class Hole:
     keys: list[str]
     bogey_plan: list[str]
     note: str
+    image: str = ""  # 골프장이 제공하는 실제 코스안내도 이미지 경로
 
     @property
     def known(self) -> bool:
@@ -169,6 +170,7 @@ def load(path: str) -> Course:
                 keys=[str(s) for s in item.get("keys", [])],
                 bogey_plan=[str(s) for s in item.get("bogey_plan", [])],
                 note=str(item.get("note", "")),
+                image=str(item.get("image", "") or ""),
             )
         )
 
