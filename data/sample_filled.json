@@ -1,0 +1,269 @@
+{
+  "_주의": [
+    "★ 이 파일의 거리·해저드·그린 정보는 레이아웃 확인용 '예시 데이터'입니다.",
+    "★ 실제 부곡CC의 야디지가 아닙니다. 코스에 들고 나가지 마세요.",
+    "★ 채워진 야디지북이 어떤 모습인지 미리 보고, 입력 형식을 확인하는 용도입니다.",
+    "   python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf"
+  ],
+
+  "course": {
+    "name": "부곡컨트리클럽",
+    "name_en": "BUGOK COUNTRY CLUB",
+    "subtitle": "홀별 코스공략 야디지북 · 예시 데이터",
+    "slogan": "전인민의 보기플레이를 위하여",
+    "address": "경상남도 창녕군 부곡면 온천로 445",
+    "tel": "055-521-0707",
+    "web": "https://www.bkcc.co.kr",
+    "holes": 18,
+    "par": 72,
+    "unit": "m",
+    "nines": [
+      { "key": "out", "name": "좌청룡", "hanja": "左靑龍", "note": "OUT" },
+      { "key": "in", "name": "우백호", "hanja": "右白虎", "note": "IN" }
+    ],
+    "notes": [
+      "★ 예시 데이터입니다 — 거리와 해저드는 실제 부곡CC 정보가 아닙니다.",
+      "레이아웃과 입력 형식을 확인한 뒤 data/bugok_cc.json 에 실제 값을 채워 넣으세요."
+    ]
+  },
+
+  "tees": [
+    { "key": "black", "label": "블랙", "color": "#1E2A22" },
+    { "key": "blue",  "label": "블루",  "color": "#2E6FA7" },
+    { "key": "white", "label": "화이트", "color": "#8A8F98" },
+    { "key": "red",   "label": "레드",  "color": "#C0392B" }
+  ],
+
+  "player": {
+    "target_score": 90,
+    "clubs": [
+      { "name": "드라이버", "dist": 200 },
+      { "name": "3번 우드", "dist": 180 },
+      { "name": "5번 유틸", "dist": 168 },
+      { "name": "5번 아이언", "dist": 155 },
+      { "name": "6번 아이언", "dist": 145 },
+      { "name": "7번 아이언", "dist": 135 },
+      { "name": "8번 아이언", "dist": 125 },
+      { "name": "9번 아이언", "dist": 113 },
+      { "name": "피칭웨지", "dist": 100 },
+      { "name": "52도 웨지", "dist": 85 },
+      { "name": "56도 웨지", "dist": 70 }
+    ]
+  },
+
+  "holes": [
+    {
+      "nine": "out", "hole": 1, "par": 4, "handicap": 9,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "black": 372, "blue": 355, "white": 336, "red": 298 },
+      "green": { "depth": 28, "width": 24, "tier": "단일 그린", "break": "전체적으로 뒤 → 앞" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "from": 205, "to": 232, "note": "티샷 랜딩존" },
+        { "type": "bunker", "side": "greenside_left", "from": 315, "to": 332 }
+      ],
+      "keys": ["첫 홀 · 몸이 덜 풀린 상태. 드라이버 대신 우드로 페어웨이 안착 우선"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 2, "par": 4, "handicap": 3,
+      "shape": "dogleg_right", "elevation": "uphill",
+      "tees": { "black": 401, "blue": 385, "white": 362, "red": 320 },
+      "green": { "depth": 30, "width": 22, "tier": "2단 그린", "break": "좌 → 우, 뒷단은 빠름" },
+      "hazards": [
+        { "type": "ob", "side": "right", "from": 0, "to": 300, "note": "우측 전 구간" },
+        { "type": "bunker", "side": "left", "from": 215, "to": 240 }
+      ],
+      "keys": ["코너를 질러가면 OB. 좌측 벙커 앞까지만 끊고 세컨을 길게 잡는다"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 3, "par": 3, "handicap": 17,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "black": 168, "blue": 155, "white": 142, "red": 118 },
+      "green": { "depth": 26, "width": 28, "tier": "단일 그린", "break": "우 → 좌" },
+      "hazards": [
+        { "type": "water", "side": "front", "note": "그린 앞 연못" },
+        { "type": "bunker", "side": "greenside_right", "from": 132, "to": 148 }
+      ],
+      "keys": ["내리막 + 앞 해저드. 짧으면 물, 길면 그냥 칩샷. 한 클럽 길게"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 4, "par": 5, "handicap": 5,
+      "shape": "dogleg_left", "elevation": "flat",
+      "tees": { "black": 512, "blue": 492, "white": 468, "red": 412 },
+      "green": { "depth": 32, "width": 26, "tier": "포대 그린", "break": "앞 → 뒤 오르막" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "from": 230, "to": 258 },
+        { "type": "water", "side": "left", "from": 380, "to": 430, "note": "레이업 구역 좌측" }
+      ],
+      "keys": ["세컨을 욕심내면 좌측 워터. 그린 100m 앞 평지까지만 보낸다"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 5, "par": 4, "handicap": 11,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "black": 340, "blue": 328, "white": 310, "red": 272 },
+      "green": { "depth": 26, "width": 24, "break": "뒤 → 앞, 빠름" },
+      "hazards": [{ "type": "bunker", "side": "greenside_left", "from": 288, "to": 305 }],
+      "keys": ["내리막 런이 많아 티샷이 길게 나간다. 그린 오버 주의"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 6, "par": 4, "handicap": 1,
+      "shape": "dogleg_right", "elevation": "uphill",
+      "tees": { "black": 425, "blue": 408, "white": 388, "red": 335 },
+      "green": { "depth": 30, "width": 22, "tier": "2단 그린", "break": "좌 → 우" },
+      "hazards": [
+        { "type": "ob", "side": "right", "from": 150, "to": 380 },
+        { "type": "bunker", "side": "left", "from": 235, "to": 262 },
+        { "type": "bunker", "side": "greenside_right", "from": 365, "to": 382 }
+      ],
+      "keys": ["코스 최난도 홀. 여기서 파를 노리지 않는다. 보기가 성공"],
+      "bogey_plan": [
+        "티샷 190m — 3번 우드로 좌측 벙커 앞. 드라이버는 우측 OB 리스크",
+        "세컨 200m 남음 — 무리한 그린 공략 금지. 7번 아이언으로 그린 80m 앞까지",
+        "서드 80m — 52도로 그린 중앙(핀이 뒷단이면 무시하고 앞단)",
+        "2퍼트 보기. 더블보기만 피하면 이 홀은 이긴 것"
+      ],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 7, "par": 3, "handicap": 15,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "black": 185, "blue": 172, "white": 158, "red": 132 },
+      "green": { "depth": 28, "width": 20, "tier": "포대 그린", "break": "우 → 좌" },
+      "hazards": [
+        { "type": "bunker", "side": "greenside_left", "from": 145, "to": 160 },
+        { "type": "bunker", "side": "greenside_right", "from": 148, "to": 162 }
+      ],
+      "keys": ["오르막 포대 그린 — 실제 두 클럽 길게. 짧으면 벙커 사이에 빠진다"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 8, "par": 4, "handicap": 7,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "black": 383, "blue": 366, "white": 345, "red": 305 },
+      "green": { "depth": 27, "width": 25, "break": "거의 평지, 뒤쪽만 흐름" },
+      "hazards": [{ "type": "water", "side": "right", "from": 250, "to": 320 }],
+      "keys": ["우측 워터를 피해 페어웨이 좌측 겨냥. 좌측 러프가 훨씬 낫다"],
+      "note": ""
+    },
+    {
+      "nine": "out", "hole": 9, "par": 5, "handicap": 13,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "black": 486, "blue": 470, "white": 448, "red": 398 },
+      "green": { "depth": 30, "width": 26, "tier": "2단 그린", "break": "앞 → 뒤" },
+      "hazards": [
+        { "type": "bunker", "side": "left", "from": 210, "to": 235 },
+        { "type": "bunker", "side": "front", "note": "그린 앞 크로스 벙커" }
+      ],
+      "keys": ["전반 마지막 오르막 파5. 세컨을 그린 앞 벙커 앞에서 끊는다"],
+      "note": ""
+    },
+
+    {
+      "nine": "in", "hole": 10, "par": 4, "handicap": 8,
+      "shape": "dogleg_left", "elevation": "downhill",
+      "tees": { "black": 368, "blue": 352, "white": 332, "red": 292 },
+      "green": { "depth": 26, "width": 24, "break": "우 → 좌" },
+      "hazards": [
+        { "type": "bunker", "side": "left", "from": 195, "to": 220 },
+        { "type": "ob", "side": "left", "from": 0, "to": 250 }
+      ],
+      "keys": ["후반 첫 홀 도그렉 좌. 페어웨이 우측에서 넓게 보고 공략"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 11, "par": 5, "handicap": 4,
+      "shape": "dogleg_right", "elevation": "flat",
+      "tees": { "black": 520, "blue": 500, "white": 476, "red": 420 },
+      "green": { "depth": 32, "width": 24, "break": "좌 → 우" },
+      "hazards": [
+        { "type": "water", "side": "right", "from": 240, "to": 300 },
+        { "type": "bunker", "side": "greenside_left", "from": 450, "to": 470 }
+      ],
+      "keys": ["티샷은 좌측 반쪽만 쓴다. 우측 워터를 넘길 생각 자체를 하지 않는다"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 12, "par": 4, "handicap": 12,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "black": 355, "blue": 340, "white": 322, "red": 284 },
+      "green": { "depth": 28, "width": 26, "break": "평지에 가까움" },
+      "hazards": [{ "type": "bunker", "side": "right", "from": 200, "to": 225 }],
+      "keys": ["가장 무난한 홀. 여기서 파를 잡아 두면 목표 스코어에 여유가 생긴다"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 13, "par": 3, "handicap": 18,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "black": 152, "blue": 140, "white": 128, "red": 105 },
+      "green": { "depth": 24, "width": 28, "break": "앞 → 뒤" },
+      "hazards": [{ "type": "bunker", "side": "greenside_right", "from": 118, "to": 132 }],
+      "keys": ["짧은 파3. 핀 무시하고 그린 중앙 — 버디 욕심이 보기를 더블로 만든다"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 14, "par": 4, "handicap": 6,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "black": 398, "blue": 382, "white": 360, "red": 316 },
+      "green": { "depth": 29, "width": 22, "tier": "2단 그린", "break": "뒤 → 앞, 빠름" },
+      "hazards": [
+        { "type": "bunker", "side": "left", "from": 220, "to": 245 },
+        { "type": "bunker", "side": "greenside_right", "from": 340, "to": 356 }
+      ],
+      "keys": ["오르막 긴 파4. 3온 2퍼트를 처음부터 계획한다"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 15, "par": 4, "handicap": 10,
+      "shape": "dogleg_left", "elevation": "downhill",
+      "tees": { "black": 345, "blue": 330, "white": 312, "red": 276 },
+      "green": { "depth": 26, "width": 24, "break": "우 → 좌" },
+      "hazards": [
+        { "type": "ob", "side": "left", "from": 120, "to": 300 },
+        { "type": "bunker", "side": "greenside_left", "from": 292, "to": 308 }
+      ],
+      "keys": ["내리막 도그렉 좌 — 코너 질러치기 유혹. 페어웨이 우측이 정답"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 16, "par": 5, "handicap": 2,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "black": 535, "blue": 512, "white": 488, "red": 430 },
+      "green": { "depth": 33, "width": 24, "tier": "포대 그린", "break": "앞 → 뒤 오르막" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "from": 225, "to": 255 },
+        { "type": "water", "side": "left", "from": 400, "to": 450 },
+        { "type": "bunker", "side": "front", "note": "그린 앞 크로스 벙커" }
+      ],
+      "keys": ["코스에서 가장 긴 홀. 4온 2퍼트 보기도 훌륭한 결과"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 17, "par": 3, "handicap": 16,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "black": 176, "blue": 162, "white": 148, "red": 122 },
+      "green": { "depth": 27, "width": 26, "break": "좌 → 우" },
+      "hazards": [
+        { "type": "water", "side": "front", "note": "그린 앞 좌측 연못" },
+        { "type": "bunker", "side": "greenside_right", "from": 138, "to": 152 }
+      ],
+      "keys": ["내리막 + 바람. 클럽을 짧게 잡되 그린 중앙 뒤쪽을 겨냥"],
+      "note": ""
+    },
+    {
+      "nine": "in", "hole": 18, "par": 4, "handicap": 14,
+      "shape": "dogleg_right", "elevation": "uphill",
+      "tees": { "black": 380, "blue": 364, "white": 344, "red": 302 },
+      "green": { "depth": 30, "width": 26, "tier": "2단 그린", "break": "뒤 → 앞" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "from": 210, "to": 238 },
+        { "type": "bunker", "side": "greenside_left", "from": 325, "to": 342 }
+      ],
+      "keys": ["마지막 오르막 홀. 클럽하우스가 보여 스윙이 빨라진다 — 평소 템포"],
+      "note": ""
+    }
+  ]
+}

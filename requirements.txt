@@ -1,0 +1,5 @@
+reportlab>=4.0
+
+# 한글 폰트(나눔고딕) 공급용. 시스템에 한글 TTF가 이미 있거나
+# fonts/ 에 직접 넣어 두었다면 없어도 됩니다.
+koreanize-matplotlib>=0.1.1
