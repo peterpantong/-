@@ -4,7 +4,8 @@
 위에 있는 **공개 교통 CCTV**를 찾아 목록·스냅샷·마크다운 리포트로 뽑아내는 스크립트입니다.
 
 - `geoje_cctv.py` — 조회 / 스냅샷 / 리포트 CLI (파이썬 표준 라이브러리만 사용)
-- `route_geoje_myeon_to_maemiseong.json` — 경로 폴리라인 (근사값, 교체 가능)
+- `fetch_route.py` — 실제 도로 경로 좌표를 받아 route 파일을 생성
+- `route_geoje_myeon_to_maemiseong.json` — 경로 폴리라인 (**현재는 근사 플레이스홀더**)
 
 ## 준비
 
@@ -47,9 +48,33 @@ export ITS_API_KEY=발급받은키
 3. `ffmpeg -frames:v 1` 로 스트림에서 한 프레임만 떠서 JPG 저장
 4. 표 + 이미지가 들어간 마크다운 리포트 작성
 
-경로 파일의 `points` 는 `[위도, 경도]` 배열입니다. 기본값은 수기로 찍은 **근사 경로**라
-표시되는 진행거리(약 19km)가 실제 주행거리(약 35km)보다 짧습니다. 내비게이션이나 라우팅 API에서
-받은 좌표열로 `points` 를 통째로 갈아끼우면 그대로 정확해집니다.
+## 경로 파일을 실제 좌표로 교체하기
+
+저장소에 들어 있는 `route_geoje_myeon_to_maemiseong.json` 은 **직선으로 이어붙인 근사
+플레이스홀더**입니다(진행거리 약 19km, 실제 주행거리는 약 35km). 실제 도로 형상이 아니라서
+반경 필터가 도로에서 벗어난 구간의 CCTV 를 놓칠 수 있으니, 아래 한 줄로 갈아끼우세요.
+
+```bash
+# 카카오모빌리티 길찾기 — 국내 도로망 기준, 가장 정확
+export KAKAO_REST_API_KEY=발급받은키   # https://developers.kakao.com
+./fetch_route.py --provider kakao \
+    --start 34.8506,128.5817 --end 34.9846,128.7115
+
+# 키 없이 쓰려면 OSRM (OSM 기반 공개 데모 서버)
+./fetch_route.py --provider osrm --start 34.8506,128.5817 --end 34.9846,128.7115
+
+# 티맵/카카오맵에서 내보낸 GPX 나 GeoJSON 이 이미 있다면
+./fetch_route.py --provider gpx  --input 매미성.gpx
+./fetch_route.py --provider json --input route.geojson
+```
+
+좌표는 전부 **`위도,경도`** 순서로 넣습니다. 경유지는 `--via 34.9090,128.6390` 처럼 여러 번
+지정할 수 있고, `--simplify 20`(기본값)은 20m 오차 안에서 점 개수를 줄여 파일을 가볍게 합니다.
+원본 그대로 두려면 `--simplify 0`.
+
+출력 파일에는 좌표뿐 아니라 `source`, `length_km`, `api_distance_m` 이 함께 기록되므로,
+API가 보고한 거리와 폴리라인 실측 길이를 비교해 경로가 제대로 잡혔는지 바로 확인할 수 있습니다.
+`points` 는 `[위도, 경도]` 배열이라 직접 손으로 고쳐도 됩니다.
 
 ## 스크립트 없이 바로 볼 수 있는 곳
 
