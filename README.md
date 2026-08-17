@@ -1,1 +1,74 @@
-# -
+# 거제면사무소 → 매미성 경로 CCTV 확인
+
+거제시 거제면사무소에서 장목면 복항마을 **매미성**까지 가는 길(국도 14호선 + 지방도 1018호선)
+위에 있는 **공개 교통 CCTV**를 찾아 목록·스냅샷·마크다운 리포트로 뽑아내는 스크립트입니다.
+
+- `geoje_cctv.py` — 조회 / 스냅샷 / 리포트 CLI (파이썬 표준 라이브러리만 사용)
+- `route_geoje_myeon_to_maemiseong.json` — 경로 폴리라인 (근사값, 교체 가능)
+
+## 준비
+
+1. 인증키 발급 — [공공데이터포털 · 국토교통부_CCTV 화상자료](https://www.data.go.kr/data/15040466/openapi.do)
+   또는 [ITS 국가교통정보센터](https://www.its.go.kr) 회원가입 후 `마이페이지 → 인증키 발급`
+2. 스냅샷을 뽑으려면 `ffmpeg` 설치 (없어도 목록·리포트는 동작하고 스트림 URL 만 남습니다)
+
+```bash
+export ITS_API_KEY=발급받은키
+```
+
+## 사용법
+
+```bash
+# 경로 반경 300m 안의 CCTV 목록 (출발지 → 도착지 순)
+./geoje_cctv.py list
+
+# 각 지점 HLS 스트림에서 한 프레임씩 캡처해 snapshots/ 에 저장
+./geoje_cctv.py snap --out snapshots
+
+# 스냅샷 + 마크다운 리포트
+./geoje_cctv.py report --out snapshots --markdown CCTV_REPORT.md
+```
+
+자주 쓰는 옵션:
+
+| 옵션 | 설명 |
+|---|---|
+| `--radius 500` | 경로에서 이 거리(m) 안의 CCTV 만 남김 (기본 300) |
+| `--road-types its ex` | `its` 국도, `ex` 고속도로. 기본은 `its` |
+| `--route my_route.json` | 다른 경로 파일 사용 |
+| `--save-raw` | API 원본 응답을 `cctv_raw_*.json` 으로 저장 |
+| `--from-file cctv_raw_its.json` | API 대신 저장해 둔 응답으로 실행 (오프라인 확인용) |
+
+## 동작 방식
+
+1. 경로 폴리라인을 감싸는 사각형(bbox)에 여유를 붙여 `openapi.its.go.kr/api/NCCTVInfo` 를 호출
+   (`cctvType=1` → 실시간 HLS 스트림)
+2. 받은 지점들을 경로 폴리라인과의 최단거리로 걸러내고, **출발지로부터의 진행거리** 순으로 정렬
+3. `ffmpeg -frames:v 1` 로 스트림에서 한 프레임만 떠서 JPG 저장
+4. 표 + 이미지가 들어간 마크다운 리포트 작성
+
+경로 파일의 `points` 는 `[위도, 경도]` 배열입니다. 기본값은 수기로 찍은 **근사 경로**라
+표시되는 진행거리(약 19km)가 실제 주행거리(약 35km)보다 짧습니다. 내비게이션이나 라우팅 API에서
+받은 좌표열로 `points` 를 통째로 갈아끼우면 그대로 정확해집니다.
+
+## 스크립트 없이 바로 볼 수 있는 곳
+
+| 구간 | 사이트 |
+|---|---|
+| 거제 시내·시도 (고현, 연초, 장평 등) | [거제시 교통정보센터](https://its.geoje.go.kr/trafficinfo/cctvInfo.do) |
+| 국도 14호선 등 국도·고속도로 | [ITS 국가교통정보센터 CCTV 지도](https://its.go.kr/map/cctv) |
+| 전국 통합 목록 | [UTIC 도시교통정보센터](http://www.utic.go.kr/traffic/cctvList.do?area=) |
+| 부산 방면 진입 | [거가대교 GK해상도로](https://www.gklink.com/page/roadinfo/realtraffic/pop_cctv04.php) |
+| 생활 CCTV (30초 제한 재생) | [거제시 대시민 CCTV 서비스](https://www.geoje.go.kr/safety/cctv.do) |
+
+## 한계와 주의사항
+
+- 여기서 다루는 것은 **공개된 교통 CCTV** 뿐입니다. 방범용 CCTV(거제시 CCTV통합관제센터)
+  영상은 개인정보보호법상 일반 열람 대상이 아니며, 사고·분실 등 사유가 있으면 관할 경찰서
+  또는 [정보공개청구](https://www.open.go.kr)를 통해야 합니다. 보관기간이 대개 30일이라
+  신청은 빠를수록 좋습니다.
+- 교통 CCTV는 **실시간만 제공**되고 과거 녹화분은 공개되지 않습니다. 특정 시각 화면이
+  필요하면 이 스크립트를 cron 등으로 주기 실행해 미리 쌓아두거나, 도로관리청
+  (국도 14호선 → 부산지방국토관리청 진주국토관리사무소)에 요청해야 합니다.
+- 거제면~하청 사이 지방도·농어촌도로 구간은 CCTV 밀도가 낮아 **공백 구간**이 생깁니다.
+  그 구간은 카카오맵/네이버 로드뷰 최신 촬영본이 더 실용적입니다.

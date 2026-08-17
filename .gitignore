@@ -1,0 +1,6 @@
+snapshots/
+*.jpg
+*.png
+cctv_raw*.json
+__pycache__/
+.venv/
