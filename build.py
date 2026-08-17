@@ -2,7 +2,7 @@
 """부곡CC 홀별 코스공략 야디지북 PDF 생성.
 
     python build.py                                  # data/bugok_cc.json -> out/부곡CC_야디지북.pdf
-    python build.py --tee blue                       # 기준 티 변경
+    python build.py --tee champion                   # 기준 티 변경 (champion/regular/lady)
     python build.py --data data/sample_filled.json   # 채워진 예시 데이터로 미리보기
 """
 
@@ -22,7 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="부곡CC 야디지북 PDF 생성기")
     ap.add_argument("--data", default=DEFAULT_DATA, help=f"코스 데이터 JSON (기본: {DEFAULT_DATA})")
     ap.add_argument("--out", default=None, help=f"출력 PDF 경로 (기본: {DEFAULT_OUT})")
-    ap.add_argument("--tee", default="white", help="플랜/도면 기준 티 (기본: white)")
+    ap.add_argument("--tee", default="regular", help="플랜/도면 기준 티 (기본: regular)")
     ap.add_argument(
         "--holes",
         default=None,

@@ -1,9 +1,10 @@
 {
-  "_주의": [
-    "거리(tees)와 par 값은 아직 채워지지 않았습니다(null).",
-    "부곡CC 스코어카드 또는 공식 홈페이지 코스안내(https://www.bkcc.co.kr/sub1_2)를 보고",
-    "각 홀의 par / handicap / tees 값을 채우면 완성된 야디지북이 생성됩니다.",
-    "null 로 남겨두면 PDF에는 직접 적어 넣을 수 있는 점선 빈칸으로 출력됩니다."
+  "_출처": [
+    "par / handicap / 거리(tees) : 부곡CC 공식 홈페이지 코스안내 > 전체코스 (https://www.bkcc.co.kr/sub2_1)",
+    "공략 포인트 / 그린 / 해저드  : 부곡CC 공식 홈페이지 코스안내 > 코스공략 (https://www.bkcc.co.kr/sub2_2)",
+    "코스안내도 이미지            : https://www.bkcc.co.kr/images/thema/sub/course/ (w-01~09, e-01~09)",
+    "shape · elevation 은 위 코스공략 설명과 코스안내도를 근거로 표기했습니다.",
+    "보기 플랜은 player.clubs 비거리에서 자동 계산되며, 본인 비거리로 고치면 함께 바뀝니다."
   ],
 
   "course": {
@@ -18,21 +19,21 @@
     "par": 72,
     "unit": "m",
     "nines": [
-      { "key": "out", "name": "좌청룡", "hanja": "左靑龍", "note": "OUT 1~9번홀 (배정은 예약 시 확인 필요)" },
-      { "key": "in", "name": "우백호", "hanja": "右白虎", "note": "IN 10~18번홀 (배정은 예약 시 확인 필요)" }
+      { "key": "out", "name": "서코스", "hanja": "WEST", "note": "OUT 1~9번홀 · 좌청룡(左靑龍) 9홀 / PAR 36 · 3,203m(챔피언)" },
+      { "key": "in", "name": "동코스", "hanja": "EAST", "note": "IN 10~18번홀 · 우백호(右白虎) 9홀 / PAR 36 · 3,091m(챔피언)" }
     ],
     "notes": [
-      "덕암산 지세를 따라 조성된 정남향 코스로, 오르내림과 좌우 경사가 많은 편입니다.",
-      "산악 코스 특성상 실제 플레이 거리는 스코어카드 거리보다 길게 체감될 수 있습니다.",
-      "그린 브레이크는 산 쪽에서 온천(저지대) 방향으로 흐르는 경향을 기본 가정으로 두고 확인하세요."
+      "정남향 코스로 사계절 라운드가 가능하며, 전장은 챔피언 6,294m / 레귤러 5,957m / 레이디 5,311m (PAR 72).",
+      "18홀 중 16홀이 좌·우 2그린 구성입니다. 서코스 9번홀과 동코스 9번홀만 원그린이라 3퍼트 주의.",
+      "좌그린이 배정된 날은 서코스 2·6번홀, 동코스 4번홀처럼 그린 옆이 바로 OB인 홀이 많아집니다. 핀 직접 공략 대신 그린 중앙이 기본.",
+      "덕암산 지세를 따라 오르내림이 있는 코스라 오르막·내리막 홀은 스코어카드 거리보다 한 클럽 이상 차이가 납니다."
     ]
   },
 
   "tees": [
-    { "key": "black", "label": "블랙", "color": "#1E2A22" },
-    { "key": "blue",  "label": "블루",  "color": "#2E6FA7" },
-    { "key": "white", "label": "화이트", "color": "#8A8F98" },
-    { "key": "red",   "label": "레드",  "color": "#C0392B" }
+    { "key": "champion", "label": "챔피언", "color": "#1E7A3C" },
+    { "key": "regular",  "label": "레귤러", "color": "#C99A2E" },
+    { "key": "lady",     "label": "레이디", "color": "#B0568C" }
   ],
 
   "player": {
@@ -54,23 +55,313 @@
   },
 
   "holes": [
-    { "nine": "out", "hole": 1,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "images/hole01.jpg" },
-    { "nine": "out", "hole": 2,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 3,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 4,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 5,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 6,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 7,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 8,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "out", "hole": 9,  "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 10, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 11, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 12, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 13, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 14, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 15, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 16, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 17, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" },
-    { "nine": "in",  "hole": 18, "par": null, "handicap": null, "shape": "straight",     "elevation": "flat",     "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "" }
+    {
+      "nine": "out", "hole": 1, "par": 4, "handicap": 5,
+      "shape": "dogleg_left", "elevation": "flat",
+      "tees": { "champion": 379, "regular": 350, "lady": 327 },
+      "green": { "tier": "좌·우 2그린", "break": "난이도는 높지 않으나 그린 뒤 여유 공간이 적다" },
+      "hazards": [
+        { "type": "ob", "side": "left", "note": "좁아 보이는 쪽" },
+        { "type": "ob", "side": "right", "note": "좌측을 피하다 오히려 여기로 나간다" }
+      ],
+      "keys": [
+        "티샷은 우그린 100M 거리목 방향 — 가장 안전하게 F/W에 안착시키는 라인",
+        "좌측 F/W가 좁게 느껴져 OB를 의식하면 오히려 우측 OB가 나는 홀",
+        "그린 난이도는 낮지만 뒤 공간이 적으니 세컨은 절대 길게 치지 말 것"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-01.png"
+    },
+    {
+      "nine": "out", "hole": 2, "par": 5, "handicap": 9,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "champion": 464, "regular": 452, "lady": 420 },
+      "green": { "tier": "좌·우 2그린", "break": "좌그린 난이도 상당히 높음 · 우그린은 평이" },
+      "hazards": [],
+      "keys": [
+        "홀 전체가 오르막이라 멀게 느껴지지만 실제로는 길지 않은 파5 — 장타자는 투온도 가능",
+        "티샷은 F/W 정중앙 조준",
+        "좌그린 핀이 뒤쪽이면 서드샷을 짧게 쳐 오르막 퍼트를 남기는 게 현명",
+        "우그린은 어렵지 않아 파온만 되면 파 세이브 무난"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-02.png"
+    },
+    {
+      "nine": "out", "hole": 3, "par": 4, "handicap": 17,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "champion": 358, "regular": 326, "lady": 313 },
+      "green": { "tier": "좌·우 2그린", "break": "특이할 만한 난이도 없음" },
+      "hazards": [
+        { "type": "bunker", "side": "left", "note": "F/W" },
+        { "type": "bunker", "side": "right", "note": "F/W" },
+        { "type": "tree", "side": "center", "note": "그린 앞 F/W 정중앙 큰 소나무 — 티샷 조준점" }
+      ],
+      "keys": [
+        "내리막과 평지로 이루어진 짧은 파4",
+        "F/W 정중앙의 큰 소나무를 보고 티샷하면 무난하게 세컨에 임할 수 있다",
+        "세컨샷 지점이 평지라 그린 공략이 쉽다 — 세컨만 잘하면 버디도 노려볼 홀"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-03.png"
+    },
+    {
+      "nine": "out", "hole": 4, "par": 3, "handicap": 7,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "champion": 198, "regular": 169, "lady": 143 },
+      "green": { "tier": "좌·우 2그린", "break": "좌그린이 까다롭다 · 앞핀을 넘기면 심한 내리막 퍼트" },
+      "hazards": [
+        { "type": "bunker", "side": "greenside_right", "note": "깊이가 상당 — 빠지면 파세이브도 어렵다" },
+        { "type": "bunker", "side": "greenside_left", "note": "깊지 않아 탈출은 무난" }
+      ],
+      "keys": [
+        "실거리 170M 안팎의 내리막 파3 — 클럽 선택이 이 홀의 전부",
+        "그린 공략 자체는 우그린이 좌그린보다 수월하다",
+        "단 우그린 앞 벙커가 매우 깊어 빠지면 파 세이브가 힘들다",
+        "핀이 앞쪽일 때 타구가 핀을 넘어가면 심한 내리막 퍼트가 남는다"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-04.png"
+    },
+    {
+      "nine": "out", "hole": 5, "par": 4, "handicap": 1,
+      "shape": "dogleg_left", "elevation": "flat",
+      "tees": { "champion": 395, "regular": 370, "lady": 315 },
+      "green": { "tier": "좌·우 2그린", "break": "우그린일 때 우측 OB 압박으로 세컨이 어려워진다" },
+      "hazards": [
+        { "type": "ob", "side": "left", "note": "공략 라인 쪽 — 의식할 수밖에 없다" },
+        { "type": "ob", "side": "right", "note": "우그린 공략 시 압박" },
+        { "type": "bunker", "side": "center", "note": "크로스벙커 — 옆 깃발이 티샷 조준점" }
+      ],
+      "keys": [
+        "핸디캡 1번, 코스에서 가장 어려운 도그렉 파4",
+        "이상적인 티샷 방향은 크로스벙커 옆 깃발 — 다만 좌측 OB를 감수해야 한다",
+        "페이드·슬라이스 구질이면 자신 있게 스윙하면 무난, 훅·드로우 구질이면 크로스벙커 쪽 조준",
+        "공략 루트를 벗어나면 세컨이 원거리로 남아 파 세이브가 어렵다",
+        "제대로 보내면 150M 안쪽에서 세컨샷"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-05.png"
+    },
+    {
+      "nine": "out", "hole": 6, "par": 4, "handicap": 13,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "champion": 324, "regular": 301, "lady": 238 },
+      "green": { "tier": "좌·우 2그린", "break": "난이도 어렵지 않음" },
+      "hazards": [
+        { "type": "ob", "side": "greenside_left", "note": "좌그린 바로 옆" },
+        { "type": "tree", "side": "right", "note": "F/W 우측 소나무 — 티샷 조준점" }
+      ],
+      "keys": [
+        "완만한 오르막과 평지로 된 짧은 파4 — 버디도 노려볼 서비스홀",
+        "F/W 우측편 소나무를 보고 티샷하면 안정적인 공략이 가능",
+        "핀이 좌그린이면 바로 옆이 OB — 세컨은 그린 중앙으로 보내는 것이 현명한 운영"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-06.png"
+    },
+    {
+      "nine": "out", "hole": 7, "par": 5, "handicap": 15,
+      "shape": "dogleg_left", "elevation": "flat",
+      "tees": { "champion": 482, "regular": 464, "lady": 436 },
+      "green": { "tier": "좌·우 2그린" },
+      "hazards": [
+        { "type": "ob", "side": "left" },
+        { "type": "ob", "side": "right" },
+        { "type": "bunker", "side": "right", "note": "티샷 낙하지점" },
+        { "type": "bunker", "side": "front", "note": "그린 앞 좌·우 — 세컨 레이업 시 주의" }
+      ],
+      "keys": [
+        "약간 좌측으로 휘어진 롱홀",
+        "티샷은 좌·우 OB와 우측 벙커를 피해 좌중간으로",
+        "세컨샷은 그린 앞 좌·우 벙커에 걸리지 않게 레이업",
+        "서드샷으로 승부하는 홀"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-07.png"
+    },
+    {
+      "nine": "out", "hole": 8, "par": 3, "handicap": 11,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "champion": 173, "regular": 143, "lady": 125 },
+      "green": { "tier": "좌그린 포대그린 · 우그린 평그린", "break": "좌·우 모두 어려운 경사는 없음" },
+      "hazards": [
+        { "type": "bunker", "side": "front", "note": "좌·우 그린 앞 — 이 홀 최대 함정" }
+      ],
+      "keys": [
+        "내리막 파3 — 좌측은 포대그린, 우측은 평그린",
+        "좌·우 그린 앞 벙커가 큰 함정",
+        "앞핀 + 내리막이라 클럽을 짧게 잡기 쉬운데, 그러면 대부분 벙커행 — 실거리대로 선택할 것",
+        "온그린만 되면 파는 무난하게 지킬 수 있다"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-08.png"
+    },
+    {
+      "nine": "out", "hole": 9, "par": 4, "handicap": 3,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "champion": 430, "regular": 422, "lady": 361 },
+      "green": { "tier": "원그린", "break": "핀에서 멀리 온되면 3퍼트가 쉽게 나온다" },
+      "hazards": [
+        { "type": "ob", "side": "left" },
+        { "type": "ob", "side": "right", "note": "보기보다 상당히 넓다" }
+      ],
+      "keys": [
+        "핸디캡 3의 긴 내리막 파4",
+        "티잉그라운드에서 숨이 막힐 정도로 F/W가 좁아 보이지만, 우측이 실제로는 상당히 넓다 — F/W 우측편 조준",
+        "좌·우 모두 OB",
+        "원그린이라 온만 시키면 끝이 아니다. 마지막 퍼트까지 신중하게"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/w-09.png"
+    },
+    {
+      "nine": "in", "hole": 10, "par": 5, "handicap": 8,
+      "shape": "dogleg_left", "elevation": "flat",
+      "tees": { "champion": 523, "regular": 513, "lady": 465 },
+      "green": { "tier": "좌·우 2그린", "break": "난이도 높지 않음 — 파온되면 파 세이브 무난" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "note": "티샷 낙하지점" },
+        { "type": "bunker", "side": "front", "note": "좌·우 그린 앞" }
+      ],
+      "keys": [
+        "전체적으로 좌로 굽은 파5 (동코스 1번홀)",
+        "페어웨이가 좁은 편이고 우측에 벙커 — 페어웨이 좌측을 보고 티샷하면 안전",
+        "좌·우 그린 앞 벙커 주의"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-01.png"
+    },
+    {
+      "nine": "in", "hole": 11, "par": 3, "handicap": 16,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "champion": 174, "regular": 159, "lady": 139 },
+      "green": { "tier": "좌·우 2그린 (거리 차이 거의 없음)" },
+      "hazards": [
+        { "type": "bunker", "side": "greenside_left", "note": "훅이 나면 이곳 또는 트러블행" }
+      ],
+      "keys": [
+        "핸디캡 16의 짧은 파3 — 티샷만 조심하면 좋은 스코어가 나오는 홀",
+        "좌·우그린 거리 차이는 거의 없다",
+        "좌그린 공략 시 훅이 나기 쉽고, 훅이 나면 좌측 벙커·트러블 확률이 높다 — 그린 중앙 조준이 안정적"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-02.png"
+    },
+    {
+      "nine": "in", "hole": 12, "par": 4, "handicap": 2,
+      "shape": "dogleg_right", "elevation": "flat",
+      "tees": { "champion": 364, "regular": 348, "lady": 266 },
+      "green": { "tier": "좌·우 2그린", "break": "난이도가 있어 3퍼팅이 나오기 쉽다" },
+      "hazards": [
+        { "type": "bunker", "side": "right", "note": "티샷은 이 벙커의 좌측으로" }
+      ],
+      "keys": [
+        "약간 우측 도그렉 미들홀 — 핸디캡 2의 난홀",
+        "티샷은 우측 벙커의 좌측으로 공략",
+        "그린 난이도가 있으니 세컨을 정교하게 핀에 근접시켜야 쓰리퍼팅을 면한다"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-03.png"
+    },
+    {
+      "nine": "in", "hole": 13, "par": 4, "handicap": 10,
+      "shape": "dogleg_right", "elevation": "flat",
+      "tees": { "champion": 320, "regular": 318, "lady": 295 },
+      "green": { "tier": "좌·우 2그린" },
+      "hazards": [
+        { "type": "ob", "side": "greenside_left", "note": "좌그린 바로 옆" },
+        { "type": "tree", "side": "center", "note": "맞은편 큰 소나무 — 티샷 IP 조준점" }
+      ],
+      "keys": [
+        "길지 않지만 드라이버 직접 공략이 어렵게 설계된 도그렉 파4",
+        "티샷은 아이언 또는 스푼으로, 맞은편 큰 소나무를 IP로 보고",
+        "그러면 100~120M 거리에서 세컨샷",
+        "좌그린일 때 그린 바로 옆이 OB — 좌측 핀이어도 직접 공략 말고 그린 중앙으로",
+        "그린 직접 공략은 드라이버 260M 이상일 때만 유효"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-04.png"
+    },
+    {
+      "nine": "in", "hole": 14, "par": 3, "handicap": 12,
+      "shape": "straight", "elevation": "uphill",
+      "tees": { "champion": 162, "regular": 134, "lady": 124 },
+      "green": { "tier": "좌·우 2그린" },
+      "hazards": [
+        { "type": "bunker", "side": "front", "note": "양쪽 그린 앞 — 짧으면 바로 벙커" }
+      ],
+      "keys": [
+        "티잉그라운드에서 그린까지 오르막인 파3 — 클럽 선택만 잘하면 크게 어렵지 않다",
+        "양쪽 그린 앞 벙커가 위압감을 주지만 티샷이 짧지만 않으면 문제되지 않는다",
+        "다만 방심은 금물"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-05.png"
+    },
+    {
+      "nine": "in", "hole": 15, "par": 4, "handicap": 6,
+      "shape": "dogleg_left", "elevation": "uphill",
+      "tees": { "champion": 365, "regular": 345, "lady": 303 },
+      "green": { "tier": "좌·우 2그린", "break": "양쪽 경사도 어렵지 않음 · 오르막이라 세로 길이가 길게 쓰인다" },
+      "hazards": [],
+      "keys": [
+        "좌측으로 약간 휘어진 오르막 파4 — 전형적인 슬라이스 홀",
+        "티샷은 그린 앞쪽 홀라이트를 보고 치면 무난",
+        "오르막이라 그린 세로 길이가 생각보다 길다 — 10M 정도 더 감안해 클럽 선택",
+        "세컨 거리만 잘 맞추면 파 세이브가 가능한 홀"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-06.png"
+    },
+    {
+      "nine": "in", "hole": 16, "par": 4, "handicap": 14,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "champion": 296, "regular": 291, "lady": 284 },
+      "green": { "tier": "좌·우 2그린", "break": "약간 까다롭지만 2퍼트는 가능 · 좌그린은 우측면이 높다" },
+      "hazards": [],
+      "keys": [
+        "300M가 채 안 되는 짧은 파4 — 장타자는 버디도 쉽게 나온다",
+        "티샷이 이 홀의 스코어를 좌우한다 — 페어웨이 안착이 최우선",
+        "티샷만 되면 아주 짧은 거리에서 세컨샷",
+        "좌그린은 그린 우측면이 높으니 세컨샷 때 참고할 것"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-07.png"
+    },
+    {
+      "nine": "in", "hole": 17, "par": 5, "handicap": 4,
+      "shape": "straight", "elevation": "flat",
+      "tees": { "champion": 573, "regular": 542, "lady": 471 },
+      "green": { "tier": "좌·우 2그린", "break": "난이도는 크지 않으나 우그린은 넘기면 곤란" },
+      "hazards": [
+        { "type": "ob", "side": "left" },
+        { "type": "ob", "side": "right", "note": "우측 벙커를 넘어가면 바로 OB" },
+        { "type": "bunker", "side": "right", "note": "페어웨이 우측부터 그린까지 이어짐" }
+      ],
+      "keys": [
+        "코스 최장 홀 (챔피언 573M) — 3온은 애초에 목표가 아니다",
+        "좌·우 모두 OB지만 페어웨이 좌측에 상당히 넓은 안전지대 — 이곳을 향해 티샷",
+        "페어웨이 우측은 그린까지 벙커가 이어지고, 벙커를 넘어서면 OB지역",
+        "세컨샷도 페어웨이 좌측으로 하는 것이 안전",
+        "우그린 공략 시 볼이 그린을 넘어가지 않도록 주의"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-08.png"
+    },
+    {
+      "nine": "in", "hole": 18, "par": 4, "handicap": 18,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "champion": 314, "regular": 310, "lady": 286 },
+      "green": { "tier": "원그린", "break": "세컨을 잘 붙여야 3퍼트를 피한다" },
+      "hazards": [],
+      "keys": [
+        "핸디캡 18의 내리막 파4 — 코스에서 가장 쉬운 홀",
+        "페어웨이가 넓어 중앙으로 티샷하면 좋은 위치에서 세컨샷",
+        "원그린이므로 세컨샷을 잘해야 3퍼트를 피할 수 있다"
+      ],
+      "bogey_plan": [], "note": "",
+      "image": "images/course/e-09.png"
+    }
   ]
 }

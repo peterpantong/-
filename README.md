@@ -24,7 +24,7 @@ JSON 한 개에 코스 데이터를 적어 넣으면 A4 22페이지짜리 야디
 pip install -r requirements.txt
 
 python build.py                                  # data/bugok_cc.json -> out/부곡CC_야디지북.pdf
-python build.py --tee blue                       # 기준 티 변경 (black/blue/white/red)
+python build.py --tee champion                   # 기준 티 변경 (champion/regular/lady)
 python build.py --holes 1 --out out/1번홀_샘플.pdf # 일부 홀만 (1 / 1-3 / 1,5,9)
 python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 ```
@@ -35,32 +35,38 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 그 아래에 거리 마커·랜딩존이 표시된 전략 개략도가 함께 붙습니다.
 
 ```jsonc
-{ "hole": 1, "image": "images/hole01.jpg", ... }
+{ "hole": 1, "image": "images/course/w-01.png", ... }
 ```
 
-이미지를 `images/` 에 저장하고 경로만 맞추면 됩니다. 파일이 없으면 개략도만 그립니다.
-자세한 내용은 [images/README.md](images/README.md) 참고.
+18홀 전부 부곡CC 공식 코스안내도가 `images/course/` 에 들어가 있습니다.
+파일이 없으면 개략도만 그립니다. 자세한 내용은 [images/README.md](images/README.md) 참고.
 
-## ⚠️ 거리 데이터는 직접 채워야 합니다
+## 코스 데이터 출처
 
-`data/bugok_cc.json` 의 **파 / 핸디캡 / 티별 거리는 비어 있습니다(null)**.
-부곡CC 공식 홈페이지가 이 작업 환경의 네트워크 정책에서 차단되어 실제 스코어카드를
-가져올 수 없었고, 확인되지 않은 거리를 지어내지 않았습니다.
+`data/bugok_cc.json` 은 부곡CC 공식 홈페이지에서 가져온 **실제 코스 데이터로 채워져 있습니다**.
 
-지금 상태로 빌드해도 **라운드 중 직접 적어 넣는 백지 야디지북**으로 바로 쓸 수 있고,
-아래 값을 채우면 모든 표·도면·플랜이 실제 값으로 채워집니다.
+| 항목 | 출처 |
+|---|---|
+| 파 · 핸디캡 · 티별 거리 | [코스안내 > 전체코스](https://www.bkcc.co.kr/sub2_1) |
+| 공략 포인트 · 그린 · 해저드 | [코스안내 > 코스공략](https://www.bkcc.co.kr/sub2_2) |
+| 홀별 코스안내도 18장 | `bkcc.co.kr/images/thema/sub/course/` (w-01~09, e-01~09) |
 
-채워 넣을 곳 (홀당):
+- 전장: 챔피언 6,294m / 레귤러 5,957m / 레이디 5,311m · PAR 72
+- 서코스(OUT, 좌청룡) PAR 36 · 3,203m / 동코스(IN, 우백호) PAR 36 · 3,091m
+- `shape`(도그렉 방향)와 `elevation`(오르막·내리막)은 공식 코스공략 설명과 코스안내도를 근거로 표기했습니다.
+- `green.depth` / `green.width` 처럼 홈페이지에 공개되지 않은 값은 비워 두었습니다 — 라운드하며 채우면 됩니다.
+
+홀 데이터 형식 (본인 관측을 덧붙일 때 참고):
 
 ```jsonc
 {
-  "nine": "out",              // out(좌청룡) | in(우백호)
+  "nine": "out",              // out(서코스/좌청룡) | in(동코스/우백호)
   "hole": 1,
   "par": 4,
-  "handicap": 9,
-  "shape": "dogleg_right",    // straight | dogleg_left | dogleg_right
-  "elevation": "uphill",      // flat | uphill | downhill
-  "tees": { "black": 372, "blue": 355, "white": 336, "red": 298 },   // 미터
+  "handicap": 5,
+  "shape": "dogleg_left",     // straight | dogleg_left | dogleg_right
+  "elevation": "flat",        // flat | uphill | downhill
+  "tees": { "champion": 379, "regular": 350, "lady": 327 },   // 미터
   "green": { "depth": 28, "width": 24, "tier": "2단 그린", "break": "좌 → 우" },
   "hazards": [
     { "type": "bunker", "side": "right", "from": 205, "to": 232, "note": "티샷 랜딩존" },
@@ -70,7 +76,7 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
   "keys": ["코너를 질러가면 OB. 좌측 벙커 앞까지만 끊는다"],   // 공략 포인트(직접 작성)
   "bogey_plan": [],           // 비워 두면 거리에서 자동 계산
   "note": "",
-  "image": "images/hole01.jpg" // 실제 코스안내도(선택)
+  "image": "images/course/w-01.png" // 실제 코스안내도(선택)
 }
 ```
 
