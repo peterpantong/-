@@ -46,6 +46,10 @@ DEFAULT_ROUTE = "route_geoje_myeon_to_maemiseong.json"
 # ITS API 는 bbox 한 변이 너무 크면 거절한다. 경로 bbox 에 이만큼(도 단위)만 여유를 준다.
 BBOX_PAD_DEG = 0.02
 
+# 거제시 전체를 대충 덮는 사각형 (minX, maxX, minY, maxY) = (경도, 경도, 위도, 위도).
+# 남단 저구/다대 ~ 북단 장목·거가대교, 서단 둔덕 ~ 동단 지세포·구조라.
+GEOJE_BBOX = (128.40, 128.82, 34.66, 35.06)
+
 Point = tuple[float, float]  # (lat, lon)
 
 
@@ -198,7 +202,13 @@ def parse_response(payload: dict, road_type: str) -> list[Cctv]:
 def collect(args) -> tuple[list[Cctv], list[Point], dict]:
     route, meta = load_route(args.route)
     cumulative = cumulative_lengths(route)
-    box = bbox_of(route, args.pad)
+
+    if args.area == "geoje":
+        box = GEOJE_BBOX
+        radius = args.radius if args.radius is not None else float("inf")
+    else:
+        box = bbox_of(route, args.pad)
+        radius = args.radius if args.radius is not None else 300.0
 
     found: list[Cctv] = []
     if args.from_file:
@@ -222,12 +232,22 @@ def collect(args) -> tuple[list[Cctv], list[Point], dict]:
     near: list[Cctv] = []
     for cam in found:
         cam.dist_m, cam.along_m = route_offset((cam.lat, cam.lon), route, cumulative)
-        if cam.dist_m <= args.radius:
+        if cam.dist_m <= radius:
             near.append(cam)
 
-    near.sort(key=lambda c: c.along_m)
-    print(f"· 전체 {len(found)}개 중 경로 반경 {args.radius:.0f}m 이내 {len(near)}개",
-          file=sys.stderr)
+    sort_key = {
+        "route": lambda c: c.along_m,
+        "dist": lambda c: c.dist_m,
+        "name": lambda c: c.name,
+    }[args.sort]
+    near.sort(key=sort_key)
+
+    if radius == float("inf"):
+        print(f"· 거제시 전역 {len(near)}개 (경로 이격 무관, 정렬: {args.sort})", file=sys.stderr)
+    else:
+        print(f"· 전체 {len(found)}개 중 경로 반경 {radius:.0f}m 이내 {len(near)}개",
+              file=sys.stderr)
+    meta = {**meta, "_radius": radius, "_area": args.area}
     return near, route, meta
 
 
@@ -271,7 +291,8 @@ def capture(cam: Cctv, out_dir: str, index: int, timeout: int = 40) -> str | Non
 def print_table(cams: Iterable[Cctv]) -> None:
     cams = list(cams)
     if not cams:
-        print("경로 반경 안에서 찾은 CCTV 가 없습니다. --radius 를 늘려보세요.")
+        print("찾은 CCTV 가 없습니다. --radius 를 늘리거나 --area geoje 로 "
+              "거제시 전역을 훑어보세요.")
         return
     print(f"{'#':>2}  {'진행(km)':>8}  {'이격(m)':>7}  {'구분':<5}  이름")
     print("-" * 72)
@@ -281,11 +302,15 @@ def print_table(cams: Iterable[Cctv]) -> None:
 
 
 def write_markdown(cams: Sequence[Cctv], meta: dict, path: str, radius: float) -> None:
+    if radius == float("inf"):
+        scope = f"**거제시 전역**의 교통 CCTV {len(cams)}개"
+    else:
+        scope = f"경로 폴리라인 반경 **{radius:.0f}m** 이내의 교통 CCTV {len(cams)}개"
+
     lines = [
         f"# {meta.get('name', '경로')} CCTV",
         "",
-        f"경로 폴리라인 반경 **{radius:.0f}m** 이내의 교통 CCTV {len(cams)}개 "
-        f"(출발지 기준 진행거리 순).",
+        f"{scope} (경로 진행거리 기준 정렬, '이격'은 경로에서 떨어진 거리).",
         "",
         "| # | 진행(km) | 이격(m) | 구분 | 지점 | 스트림 | 스냅샷 |",
         "|---:|---:|---:|:--|:--|:--|:--|",
@@ -322,8 +347,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--api-key", default=None, help="ITS 인증키 (기본 ITS_API_KEY 환경변수)")
     parser.add_argument("--road-types", nargs="+", default=["its"], choices=["its", "ex"],
                         help="its=국도, ex=고속도로 (기본 its)")
-    parser.add_argument("--radius", type=float, default=300.0,
-                        help="경로에서 이 거리(m) 안의 CCTV 만 (기본 300)")
+    parser.add_argument("--area", default="route", choices=["route", "geoje"],
+                        help="route=경로 주변만, geoje=거제시 전역 훑기 (기본 route)")
+    parser.add_argument("--radius", type=float, default=None,
+                        help="경로에서 이 거리(m) 안의 CCTV 만 "
+                             "(기본: route 모드 300m, geoje 모드 제한 없음)")
+    parser.add_argument("--sort", default="route", choices=["route", "dist", "name"],
+                        help="route=경로 진행순, dist=경로에서 가까운순, name=이름순 (기본 route)")
     parser.add_argument("--pad", type=float, default=BBOX_PAD_DEG,
                         help=f"조회 bbox 여유 (도 단위, 기본 {BBOX_PAD_DEG})")
     parser.add_argument("--out", default="snapshots", help="스냅샷 저장 폴더 (기본 snapshots)")
@@ -351,7 +381,7 @@ def main(argv: list[str] | None = None) -> int:
     print_table(cams)
 
     if args.command == "report":
-        write_markdown(cams, meta, args.markdown, args.radius)
+        write_markdown(cams, meta, args.markdown, meta["_radius"])
 
     return 0
 
