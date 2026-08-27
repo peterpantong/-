@@ -1,0 +1,114 @@
+/**
+ * 루트 최저가 주유소 — 로컬 웹 서버.
+ * 의존성 없이 Node 표준 모듈만 쓴다. `npm start` 후 http://localhost:3000
+ */
+import http from 'node:http';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as tmap from './tmap.js';
+import { planRoute } from './plan.js';
+import { MAX_WAYPOINTS } from './tmap.js';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PUBLIC = path.join(ROOT, 'public');
+const PORT = Number(process.env.PORT || 3000);
+
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+};
+
+function send(res, status, payload, headers = {}) {
+  const body = typeof payload === 'string' || Buffer.isBuffer(payload)
+    ? payload : JSON.stringify(payload);
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    ...headers,
+  });
+  res.end(body);
+}
+
+async function readJson(req, limitBytes = 256 * 1024) {
+  const chunks = [];
+  let size = 0;
+  for await (const c of req) {
+    size += c.length;
+    if (size > limitBytes) throw new Error('요청이 너무 큽니다.');
+    chunks.push(c);
+  }
+  if (!chunks.length) return {};
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
+function asStop(v, label) {
+  const lat = Number(v?.lat), lon = Number(v?.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error(`${label} 좌표가 없습니다.`);
+  if (lat < 33 || lat > 39 || lon < 124 || lon > 132) throw new Error(`${label} 좌표가 국내 범위를 벗어났습니다.`);
+  return { lat, lon, name: String(v.name || label).slice(0, 60), viaExpressway: Boolean(v.viaExpressway) };
+}
+
+async function serveStatic(req, res, urlPath) {
+  const rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+  const file = path.join(PUBLIC, rel);
+  // 디렉터리 밖으로 나가는 경로 차단
+  if (!file.startsWith(PUBLIC + path.sep) && file !== path.join(PUBLIC, 'index.html')) {
+    return send(res, 403, { error: '접근할 수 없습니다.' });
+  }
+  try {
+    const data = await fs.readFile(file);
+    send(res, 200, data, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+  } catch {
+    send(res, 404, { error: '찾을 수 없습니다.' });
+  }
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  try {
+    if (req.method === 'GET' && url.pathname === '/api/config') {
+      return send(res, 200, { hasTmapKey: tmap.hasKey(), maxWaypoints: MAX_WAYPOINTS });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/poi') {
+      const q = (url.searchParams.get('q') || '').trim();
+      if (q.length < 2) return send(res, 400, { error: '두 글자 이상 입력하세요.' });
+      if (!tmap.hasKey()) return send(res, 400, { error: 'TMAP_APP_KEY 가 없어 장소 검색을 쓸 수 없습니다. 좌표를 직접 입력하세요.' });
+      return send(res, 200, { results: await tmap.searchPoi(q) });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/plan') {
+      const body = await readJson(req);
+      const start = asStop(body.start, '출발지');
+      const goal = asStop(body.goal, '도착지');
+      const waypoints = (body.waypoints || []).map((w, i) => asStop(w, `경유지 ${i + 1}`));
+      const mode = tmap.hasKey() && body.mode !== 'straight' ? 'tmap' : 'straight';
+      if (mode === 'tmap' && waypoints.length > MAX_WAYPOINTS) {
+        return send(res, 400, { error: `경유지는 최대 ${MAX_WAYPOINTS}곳입니다.` });
+      }
+      const plan = await planRoute({ start, goal, waypoints }, { mode });
+      return send(res, 200, plan);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, { ok: true });
+
+    if (req.method === 'GET') return serveStatic(req, res, url.pathname);
+    send(res, 405, { error: '지원하지 않는 요청입니다.' });
+  } catch (err) {
+    const status = err?.name === 'TmapError' ? 502 : 400;
+    send(res, status, { error: err?.message || '알 수 없는 오류', detail: err?.body });
+  }
+});
+
+if (process.argv[1] && process.argv[1].endsWith('server.js')) {
+  server.listen(PORT, () => {
+    console.log(`▶ http://localhost:${PORT}`);
+    console.log(tmap.hasKey()
+      ? '  TMAP_APP_KEY 감지됨 — 실제 도로 경로로 조회합니다.'
+      : '  TMAP_APP_KEY 없음 — 직선 근사 모드로 동작합니다. .env 에 키를 넣으면 실제 경로를 씁니다.');
+  });
+}
+
+export { server };
