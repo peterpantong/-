@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>루트 최저가 주유소</title>
+<meta name="description" content="출발지·경유지·도착지를 넣으면 그 경로에서 가장 싼 주유소를 찾아줍니다.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <div class="eyebrow"><span class="dot"></span><b>TMAP 경로 · 오피넷 유가</b><i>·</i>전국 어디든</div>
+    <h1>루트 <em>최저가 주유소</em></h1>
+    <div class="stamp" id="stamp"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="banner warn" id="modeBanner" hidden></p>
+  <p class="banner error" id="errorBanner" hidden></p>
+
+  <section class="planner">
+    <h2>경로</h2>
+    <div class="stops" id="stops"></div>
+    <div class="plan-actions">
+      <button class="btn" id="addStop" type="button">＋ 경유지 추가</button>
+      <button class="btn primary lg" id="search" type="button">경로 유가 조회</button>
+      <span class="progress" id="progress"></span>
+      <span class="note" id="hint">장소 이름·주소를 입력해 고르거나, <code>35.1234, 128.5678</code> 처럼 좌표를 직접 넣어도 됩니다.</span>
+    </div>
+  </section>
+
+  <div class="results" id="results" hidden>
+    <section class="tiles" id="tiles"></section>
+
+    <section class="controls" aria-label="검색 조건">
+      <div class="ctrl-row">
+        <div class="seg" role="group" aria-label="유종">
+          <button data-fuel="gasoline" aria-pressed="true">휘발유</button>
+          <button data-fuel="diesel" aria-pressed="false">경유</button>
+          <button data-fuel="premium" aria-pressed="false">고급휘발유</button>
+        </div>
+        <div class="field">
+          <label for="off">루트 이탈</label>
+          <input type="range" id="off" min="1" max="21" step="1" value="5">
+          <output id="offOut">5 km</output>
+        </div>
+        <button class="toggle" id="tSelf" aria-pressed="false">셀프</button>
+        <button class="toggle" id="t24" aria-pressed="false">24시간</button>
+        <button class="toggle" id="tAlt" aria-pressed="false">알뜰</button>
+        <div class="field">
+          <label for="brand">상표</label>
+          <select id="brand"><option value="">전체</option></select>
+        </div>
+        <div class="field">
+          <label for="reg">시·군</label>
+          <select id="reg"><option value="">전체</option></select>
+        </div>
+        <div class="field">
+          <label for="vol">주유량</label>
+          <input type="number" id="vol" min="5" max="200" step="5" value="40"> L
+        </div>
+        <div class="field">
+          <label for="q">검색</label>
+          <input type="search" id="q" placeholder="이름·주소">
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+    </section>
+
+    <div class="grid">
+      <aside class="rail" aria-label="구간별 최저가">
+        <h2 id="railTitle">구간별 최저가</h2>
+        <ol id="rail"></ol>
+      </aside>
+      <div id="main"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <h3>데이터에 대하여</h3>
+    <ul>
+      <li>경로는 <b>TMAP 자동차 경로안내</b>, 가격은 <b>한국석유공사 오피넷</b>에 주유소가 신고한 판매가격입니다. 주유소는 하루에도 여러 번 가격을 바꿔 신고합니다.</li>
+      <li><b>고속도로를 달리는 구간</b>에서는 IC로 빠져나가지 않는 한 시내 주유소를 쓸 수 없습니다. 그래서 그 구간에는 <b>진행 방향 휴게소 주유소</b>만 남기고, 반대 방향 휴게소와 경로가 지나지 않는 노선의 휴게소는 뺐습니다.</li>
+      <li><b>루트 이탈</b>은 일반도로 구간의 경로선까지 직선거리 근사치입니다. 고속도로 본선 옆이라 IC로 나가야 닿는 곳에는 <b>IC 밖</b> 표시를 붙였습니다.</li>
+      <li>가격이 없는 유종은 해당 유종을 팔지 않는 주유소입니다. <code>99999</code>로 신고된 곳은 미판매로 보고 제외했습니다.</li>
+    </ul>
+  </div>
+</footer>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>

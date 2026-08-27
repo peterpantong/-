@@ -1,0 +1,12 @@
+{
+  "name": "route-fuel-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "출발지·경유지·도착지를 넣으면 그 경로에서 가장 싼 주유소를 찾아주는 도구 (TMAP 경로 + 오피넷 유가)",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "test": "node --test test/*.test.js"
+  }
+}
