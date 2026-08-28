@@ -205,3 +205,71 @@ test('매니페스트와 아이콘을 알맞은 타입으로 내려준다', asyn
   assert.equal(icon.status, 200);
   assert.equal(icon.headers.get('content-type'), 'image/png');
 });
+
+test('TMAP 이 200 으로 오류를 내려보내면 실패로 처리한다', async () => {
+  const saved = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    if (String(input).includes('/tmap/pois')) {
+      // SK 게이트웨이가 실제로 이런 식으로 200 + 오류 본문을 주는 경우가 있다.
+      return new Response(JSON.stringify({ error: { id: 'x', code: '9999', message: 'Quota Exceeded' } }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return saved(input);
+  };
+  try {
+    const res = await realFetch(`${baseUrl}/api/poi?q=서울시청`);
+    assert.equal(res.status, 502, '결과 0건이 아니라 오류로 보고해야 한다');
+    assert.match((await res.json()).error, /Quota Exceeded/);
+  } finally {
+    globalThis.fetch = saved;
+  }
+});
+
+test('검색 결과가 0건이면 진단 정보를 함께 준다', async () => {
+  const saved = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    if (String(input).includes('/tmap/pois')) {
+      return new Response(JSON.stringify({ searchPoiInfo: { totalCount: '0', pois: { poi: [] } } }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return saved(input);
+  };
+  try {
+    const { status, body } = await get('/api/poi?q=없는장소');
+    assert.equal(status, 200);
+    assert.deepEqual(body.results, []);
+    assert.equal(body.diagnostics.totalCount, '0');
+    assert.equal(body.diagnostics.parsed, 0);
+    assert.match(body.diagnostics.url, /searchKeyword/);
+    assert.ok(body.diagnostics.raw.includes('searchPoiInfo'));
+  } finally {
+    globalThis.fetch = saved;
+  }
+});
+
+test('결과가 있으면 진단 정보를 붙이지 않는다', async () => {
+  const { body } = await get('/api/poi?q=거제면사무소');
+  assert.equal(body.results.length, 1);
+  assert.equal(body.diagnostics, undefined);
+});
+
+test('좌표가 없는 항목은 버리고 몇 개 버렸는지 남긴다', async () => {
+  const saved = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    if (String(input).includes('/tmap/pois')) {
+      return new Response(JSON.stringify({ searchPoiInfo: { totalCount: '2', pois: { poi: [
+        { id: '1', name: '좌표없음', upperAddrName: '서울' },
+        { id: '2', name: '정상', upperAddrName: '서울', frontLat: '37.5663', frontLon: '126.9779' },
+      ] } } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return saved(input);
+  };
+  try {
+    const { body } = await get('/api/poi?q=서울시청');
+    assert.equal(body.results.length, 1);
+    assert.equal(body.results[0].name, '정상');
+    assert.equal(body.diagnostics, undefined, '쓸 수 있는 결과가 있으면 진단은 붙지 않는다');
+  } finally {
+    globalThis.fetch = saved;
+  }
+});

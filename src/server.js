@@ -103,7 +103,9 @@ const server = http.createServer(async (req, res) => {
       const q = (url.searchParams.get('q') || '').trim();
       if (q.length < 2) return send(res, 400, { error: '두 글자 이상 입력하세요.' });
       if (!tmap.hasKey()) return send(res, 400, { error: 'TMAP_APP_KEY 가 없어 장소 검색을 쓸 수 없습니다. 좌표를 직접 입력하세요.' });
-      return send(res, 200, { results: await tmap.searchPoi(q) });
+      const { results, diagnostics } = await tmap.searchPoi(q);
+      // 결과가 없을 때만 진단을 함께 보낸다 — 왜 비었는지는 응답 원문을 봐야 알 수 있다.
+      return send(res, 200, results.length ? { results } : { results, diagnostics });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/plan') {
