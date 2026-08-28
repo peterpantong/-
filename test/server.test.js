@@ -162,3 +162,46 @@ test('정적 파일을 서빙하고 디렉터리 밖 접근은 막는다', async
   const escape = await realFetch(`${baseUrl}/../package.json`, { redirect: 'manual' });
   assert.ok(escape.status === 403 || escape.status === 404 || escape.status === 301, `${escape.status}`);
 });
+
+test('ACCESS_CODE 를 걸면 코드 없이는 조회할 수 없다', async () => {
+  process.env.ACCESS_CODE = '비밀번호';
+  try {
+    const bare = await realFetch(`${baseUrl}/api/poi?q=거제면사무소`);
+    assert.equal(bare.status, 401);
+    assert.equal((await bare.json()).code, 'access_code_required');
+
+    const send = (code) => realFetch(`${baseUrl}/api/poi?q=거제면사무소`,
+      { headers: { 'x-access-code': encodeURIComponent(code) } });
+
+    assert.equal((await send('틀린값')).status, 401, '길이가 달라도 401');
+    assert.equal((await send('비밀번혼')).status, 401, '길이가 같아도 401');
+    assert.equal((await send('비밀번호')).status, 200, '한글 코드도 통과해야 한다');
+    // 인코딩이 깨진 헤더를 받아도 서버가 죽지 않는다.
+    assert.equal((await realFetch(`${baseUrl}/api/poi?q=거제면사무소`,
+      { headers: { 'x-access-code': '%E0%A4%A' } })).status, 401);
+
+    // 코드를 몰라도 화면 자체는 열려야 코드 입력창을 띄울 수 있다.
+    assert.equal((await realFetch(`${baseUrl}/`)).status, 200);
+    const cfg = await (await realFetch(`${baseUrl}/api/config`)).json();
+    assert.equal(cfg.needsAccessCode, true, '설정 조회는 코드 없이도 되어야 한다');
+  } finally {
+    delete process.env.ACCESS_CODE;
+  }
+});
+
+test('ACCESS_CODE 가 없으면 아무나 조회할 수 있다', async () => {
+  const res = await realFetch(`${baseUrl}/api/poi?q=거제면사무소`);
+  assert.equal(res.status, 200);
+  assert.equal((await (await realFetch(`${baseUrl}/api/config`)).json()).needsAccessCode, false);
+});
+
+test('매니페스트와 아이콘을 알맞은 타입으로 내려준다', async () => {
+  const m = await realFetch(`${baseUrl}/manifest.webmanifest`);
+  assert.equal(m.status, 200);
+  assert.match(m.headers.get('content-type'), /manifest\+json/);
+  assert.equal((await m.json()).short_name, '주유루트');
+
+  const icon = await realFetch(`${baseUrl}/icons/icon-192.png`);
+  assert.equal(icon.status, 200);
+  assert.equal(icon.headers.get('content-type'), 'image/png');
+});

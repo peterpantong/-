@@ -19,6 +19,34 @@ const S = {
 };
 let PLAN = null;
 let hasTmapKey = false;
+let needsAccessCode = false;
+
+/* ---------------- 접속 코드 ---------------- */
+const CODE_KEY = 'route-fuel-access';
+const readCode = () => { try { return localStorage.getItem(CODE_KEY) || ''; } catch { return ''; } };
+const writeCode = (v) => { try { localStorage.setItem(CODE_KEY, v); } catch { /* 저장 못 해도 이번 세션은 동작한다 */ } };
+
+function askCode(message = '접속 코드를 입력하세요.') {
+  const v = (window.prompt(message, readCode()) || '').trim();
+  if (v) writeCode(v);
+  return v;
+}
+
+/** 접속 코드를 붙여 호출하고, 코드가 틀리면 한 번만 다시 묻는다. */
+async function api(path, init = {}, retry = true) {
+  const headers = { ...(init.headers || {}) };
+  const code = readCode();
+  // HTTP 헤더는 ASCII 만 담기므로 한글 코드도 쓸 수 있게 인코딩해 보낸다.
+  if (code) headers['x-access-code'] = encodeURIComponent(code);
+  const res = await fetch(path, { ...init, headers });
+  if (res.status === 401 && retry) {
+    const data = await res.clone().json().catch(() => ({}));
+    if (data.code === 'access_code_required' && askCode('접속 코드가 맞지 않습니다. 다시 입력하세요.')) {
+      return api(path, init, false);
+    }
+  }
+  return res;
+}
 
 try {
   const saved = JSON.parse(localStorage.getItem('route-fuel-v1') || 'null');
@@ -220,7 +248,7 @@ function onType(stop, input, list) {
       return;
     }
     try {
-      const res = await fetch(`/api/poi?q=${encodeURIComponent(stop.text.trim())}`);
+      const res = await api(`/api/poi?q=${encodeURIComponent(stop.text.trim())}`);
       const data = await res.json();
       const items = data.results || [];
       list.innerHTML = items.length
@@ -289,7 +317,7 @@ $('search').addEventListener('click', async () => {
       goal: stops[stops.length - 1].picked,
       waypoints: stops.filter((s) => s.role === 'via').map((s) => s.picked),
     };
-    const res = await fetch('/api/plan', {
+    const res = await api('/api/plan', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -521,6 +549,8 @@ $('vol').value = S.vol;
 fetch('/api/config').then((r) => r.json()).then((cfg) => {
   hasTmapKey = cfg.hasTmapKey;
   maxWaypoints = cfg.maxWaypoints ?? 5;
+  needsAccessCode = Boolean(cfg.needsAccessCode);
+  if (needsAccessCode && !readCode()) askCode('이 주소는 접속 코드로 보호되어 있습니다.');
   if (!hasTmapKey) {
     banner('modeBanner', '<b>TMAP_APP_KEY 가 없습니다.</b> 장소 검색이 꺼지고, 경로는 정거장 사이를 직선으로 이은 근사값으로 계산됩니다. '
       + '<code>.env</code> 에 키를 넣고 서버를 다시 시작하면 실제 도로 경로로 조회합니다.');
