@@ -1,5 +1,5 @@
 /* 루트 최저가 주유소 — 프런트엔드 */
-import { encodeRoute, decodeRoute, routeName, reverseStops } from './share.js';
+import { encodeRoute, decodeRoute, routeName, reverseStops, pushRecent } from './share.js';
 
 const $ = (id) => document.getElementById(id);
 const won = (n) => (n == null ? '—' : n.toLocaleString('ko-KR'));
@@ -40,37 +40,51 @@ let maxWaypoints = 5;
 
 /* ---------------- 저장된 루트 ---------------- */
 const PRESET_KEY = 'route-fuel-presets-v1';
-/** 처음 열었을 때도 고를 게 있도록 넣어둔 예시. 저장 목록과 섞이지 않게 따로 둔다. */
-const EXAMPLES = [{
-  name: '거제면사무소 → 구미 사곡역',
-  route: JSON.stringify([
-    { n: '거제면사무소', y: 34.85106, x: 128.5904 },
-    { n: '합천읍', y: 35.566, x: 128.1579 },
-    { n: '구미 사곡역', y: 36.1002, x: 128.3533 },
-  ]),
-}];
+const RECENT_KEY = 'route-fuel-recents-v1';
 
-function loadPresets() {
+// 특정 지역을 미리 박아두지 않는다. 목록은 쓰는 대로 채워진다.
+function readList(key) {
   try {
-    const raw = JSON.parse(localStorage.getItem(PRESET_KEY) || '[]');
+    const raw = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(raw) ? raw.filter((p) => p?.name && p?.route) : [];
   } catch { return []; }
 }
-function storePresets(list) {
-  try { localStorage.setItem(PRESET_KEY, JSON.stringify(list)); } catch { /* 저장 실패는 조회에 영향 없다 */ }
+function writeList(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* 저장 실패는 조회에 영향 없다 */ }
 }
+const loadPresets = () => readList(PRESET_KEY);
+const storePresets = (list) => writeList(PRESET_KEY, list);
 
 function renderPresets(selected = '') {
   const sel = $('preset');
-  const mine = loadPresets();
-  sel.innerHTML = '<option value="">새 루트</option>'
-    + (mine.length ? `<optgroup label="내 루트">${
-        mine.map((p) => `<option value="mine:${esc(p.name)}">${esc(p.name)}</option>`).join('')}</optgroup>` : '')
-    + `<optgroup label="예시">${
-        EXAMPLES.map((p, i) => `<option value="ex:${i}">${esc(p.name)}</option>`).join('')}</optgroup>`;
+  const group = (label, prefix, items) => (items.length
+    ? `<optgroup label="${label}">${items.map((p, i) =>
+        `<option value="${prefix}${prefix === 'mine:' ? esc(p.name) : i}">${esc(p.name)}</option>`).join('')}</optgroup>`
+    : '');
+  sel.innerHTML = '<option value="">새 루트 — 입력 비우기</option>'
+    + group('내 루트', 'mine:', loadPresets())
+    + group('최근 조회', 'recent:', readList(RECENT_KEY));
   sel.value = selected;
   if (sel.value !== selected) sel.value = '';
   $('delPreset').disabled = !sel.value.startsWith('mine:');
+}
+
+/** 조회에 성공한 루트를 최근 목록에 남긴다 — 지역을 바꿔 쓸수록 목록이 채워진다. */
+function rememberRecent() {
+  const route = encodeRoute(stops);
+  if (!route) return;
+  writeList(RECENT_KEY, pushRecent(readList(RECENT_KEY), { name: routeName(stops), route }));
+  renderPresets($('preset').value);
+}
+
+/** 다른 지역을 조회하려고 입력을 비운다. */
+function newRoute() {
+  stops = [
+    { role: 'start', label: '출발지', text: '', picked: null },
+    { role: 'goal', label: '도착지', text: '', picked: null },
+  ];
+  renderStops();
+  banner('errorBanner', '');
 }
 
 function applyStops(next) {
@@ -83,9 +97,9 @@ function applyStops(next) {
 $('preset').addEventListener('change', (e) => {
   const v = e.target.value;
   $('delPreset').disabled = !v.startsWith('mine:');
-  if (!v) return;
-  const src = v.startsWith('ex:')
-    ? EXAMPLES[Number(v.slice(3))]
+  if (!v) { newRoute(); return; }
+  const src = v.startsWith('recent:')
+    ? readList(RECENT_KEY)[Number(v.slice(7))]
     : loadPresets().find((p) => `mine:${p.name}` === v);
   if (!src) return;
   if (!applyStops(decodeRoute(src.route))) {
@@ -285,6 +299,7 @@ $('search').addEventListener('click', async () => {
     buildFilters();
     renderStamp();
     render();
+    rememberRecent();
     if (data.warnings?.length) banner('errorBanner', data.warnings.map(esc).join('<br>'));
     $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {

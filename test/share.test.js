@@ -67,3 +67,27 @@ test('reverseStops 는 돌아오는 길을 만든다', () => {
   assert.deepEqual(back.map((s) => s.role), ['start', 'via', 'goal']);
   assert.deepEqual(back.map((s) => s.label), ['출발지', '경유지', '도착지']);
 });
+
+test('pushRecent 는 최신 것을 앞에 두고 개수를 제한한다', async () => {
+  const { pushRecent } = await import('../public/share.js');
+  let list = [];
+  for (const n of ['a', 'b', 'c', 'd', 'e', 'f']) {
+    list = pushRecent(list, { name: n, route: `[${n}]` });
+  }
+  assert.deepEqual(list.map((x) => x.name), ['f', 'e', 'd', 'c', 'b']);
+});
+
+test('pushRecent 는 같은 루트를 중복으로 쌓지 않고 앞으로 올린다', async () => {
+  const { pushRecent } = await import('../public/share.js');
+  let list = pushRecent(pushRecent([], { name: 'a', route: '[a]' }), { name: 'b', route: '[b]' });
+  list = pushRecent(list, { name: 'a(다시)', route: '[a]' });
+  assert.deepEqual(list.map((x) => x.name), ['a(다시)', 'b']);
+  assert.equal(list.length, 2);
+});
+
+test('pushRecent 는 망가진 입력에도 목록을 지킨다', async () => {
+  const { pushRecent } = await import('../public/share.js');
+  assert.deepEqual(pushRecent(null, { name: 'a', route: '[a]' }).map((x) => x.name), ['a']);
+  assert.deepEqual(pushRecent([{ name: 'a', route: '[a]' }], { route: '' }).map((x) => x.name), ['a']);
+  assert.deepEqual(pushRecent(undefined, {}), []);
+});

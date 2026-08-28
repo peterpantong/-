@@ -69,3 +69,13 @@ export function reverseStops(stops) {
     label: i === 0 ? '출발지' : i === arr.length - 1 ? '도착지' : '경유지',
   }));
 }
+
+/**
+ * 최근 조회 목록에 새 항목을 얹는다.
+ * 같은 루트를 다시 조회하면 중복으로 쌓이지 않고 맨 앞으로 올라온다.
+ */
+export function pushRecent(list, entry, limit = 5) {
+  if (!entry?.route) return Array.isArray(list) ? list.slice(0, limit) : [];
+  const rest = (Array.isArray(list) ? list : []).filter((x) => x?.route && x.route !== entry.route);
+  return [entry, ...rest].slice(0, limit);
+}
