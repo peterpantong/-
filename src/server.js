@@ -3,6 +3,7 @@
  * 의존성 없이 Node 표준 모듈만 쓴다. `npm start` 후 http://localhost:3000
  */
 import http from 'node:http';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,8 +18,26 @@ const PORT = Number(process.env.PORT || 3000);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.png': 'image/png',
 };
+
+/**
+ * 인터넷에 올려 두면 주소를 아는 누구나 TMAP 호출을 일으킬 수 있다.
+ * ACCESS_CODE 를 설정하면 그 값을 아는 사람만 조회할 수 있다.
+ */
+function accessAllowed(req) {
+  const expected = process.env.ACCESS_CODE;
+  if (!expected) return true;
+  const raw = req.headers['x-access-code'];
+  if (typeof raw !== 'string') return false;
+  // HTTP 헤더는 ASCII 만 담을 수 있어 한글 코드도 쓸 수 있도록 퍼센트 인코딩해 받는다.
+  let given;
+  try { given = decodeURIComponent(raw); } catch { return false; }
+  const a = Buffer.from(given), b = Buffer.from(expected);
+  // 길이가 다르면 timingSafeEqual 이 던지므로 먼저 거른다.
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 function send(res, status, payload, headers = {}) {
   const body = typeof payload === 'string' || Buffer.isBuffer(payload)
@@ -69,7 +88,15 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
     if (req.method === 'GET' && url.pathname === '/api/config') {
-      return send(res, 200, { hasTmapKey: tmap.hasKey(), maxWaypoints: MAX_WAYPOINTS });
+      return send(res, 200, {
+        hasTmapKey: tmap.hasKey(),
+        maxWaypoints: MAX_WAYPOINTS,
+        needsAccessCode: Boolean(process.env.ACCESS_CODE),
+      });
+    }
+
+    if (url.pathname.startsWith('/api/') && !accessAllowed(req)) {
+      return send(res, 401, { error: '접속 코드가 필요합니다.', code: 'access_code_required' });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/poi') {

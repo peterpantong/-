@@ -1,0 +1,19 @@
+# Render 블루프린트 — 이 파일이 있으면 저장소를 고르는 것만으로 배포된다.
+# https://render.com → New → Blueprint → 이 저장소 선택
+services:
+  - type: web
+    name: route-fuel-finder
+    runtime: node
+    plan: free
+    region: singapore          # 한국에서 가장 가까운 지역
+    buildCommand: "echo '의존성 없음 — 빌드할 것이 없습니다'"
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TMAP_APP_KEY
+        sync: false            # 배포 화면에서 직접 입력 (저장소에 남지 않는다)
+      - key: ACCESS_CODE
+        sync: false            # 비워두면 주소를 아는 누구나 쓸 수 있다
