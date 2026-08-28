@@ -249,22 +249,33 @@ function onType(stop, input, list) {
     }
     try {
       const res = await api(`/api/poi?q=${encodeURIComponent(stop.text.trim())}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        list.innerHTML = `<li class="s-empty"><b>검색 실패</b><br>${esc(data.error || `서버 오류 ${res.status}`)}</li>`;
+        list.hidden = false;
+        return;
+      }
       const items = data.results || [];
       list.innerHTML = items.length
         ? items.map((p, i) => `<li><button type="button" data-i="${i}">
              <span class="s-nm">${esc(p.name)}</span>
              <span class="s-ad">${esc(p.roadAddress || p.address)}</span></button></li>`).join('')
-        : '<li class="s-empty">검색 결과가 없습니다.</li>';
+        : `<li class="s-empty">검색 결과가 없습니다. <code>35.1234, 128.5678</code> 처럼 좌표를 직접 넣어도 됩니다.
+             ${data.diagnostics ? '<br><button type="button" class="s-diag">진단 정보 보기</button>' : ''}</li>`;
       list.hidden = false;
-      list.querySelectorAll('button').forEach((b) => b.addEventListener('mousedown', (e) => {
+      list.querySelector('.s-diag')?.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        showDiagnostics(list, data.diagnostics);
+      });
+      // 후보 버튼에만 선택 동작을 붙인다 — 진단 버튼까지 걸리면 클릭할 때 터진다.
+      list.querySelectorAll('button[data-i]').forEach((b) => b.addEventListener('mousedown', (e) => {
         e.preventDefault();
         const p = items[Number(b.dataset.i)];
         setPicked(stop, { name: p.name, lat: p.lat, lon: p.lon }, { syncInput: true });
         list.hidden = true;
       }));
-    } catch {
-      list.innerHTML = '<li class="s-empty">검색에 실패했습니다.</li>';
+    } catch (err) {
+      list.innerHTML = `<li class="s-empty"><b>검색 실패</b><br>${esc(err.message || '서버에 연결하지 못했습니다.')}</li>`;
       list.hidden = false;
     }
   }, 250);
@@ -278,6 +289,26 @@ function paintPicked(stop) {
   el.textContent = stop.picked
     ? `📍 ${stop.picked.name} · ${stop.picked.lat.toFixed(5)}, ${stop.picked.lon.toFixed(5)}`
     : '아직 지정되지 않음';
+}
+
+/** 검색이 0건일 때 TMAP 이 실제로 무엇을 돌려줬는지 보여준다. */
+function showDiagnostics(list, d) {
+  const text = [
+    `요청: ${d.url}`,
+    `TMAP totalCount: ${d.totalCount}`,
+    `읽어낸 항목: ${d.parsed}개 (좌표 없어 버린 것 ${d.dropped}개)`,
+    '응답 원문(앞부분):',
+    d.raw,
+  ].join('\n');
+  list.innerHTML = `<li class="s-empty">
+    <button type="button" class="s-copy">진단 정보 복사</button>
+    <pre class="s-raw">${esc(text)}</pre></li>`;
+  list.hidden = false;
+  list.querySelector('.s-copy')?.addEventListener('mousedown', async (e) => {
+    e.preventDefault();
+    try { await navigator.clipboard.writeText(text); flash('진단 정보를 복사했습니다.'); }
+    catch { flash('복사가 안 되면 아래 내용을 직접 긁어서 보내주세요.'); }
+  });
 }
 
 function setPicked(stop, picked, { syncInput = false } = {}) {
