@@ -1,4 +1,5 @@
 /* 루트 최저가 주유소 — 프런트엔드 */
+import { encodeRoute, decodeRoute, routeName, reverseStops } from './share.js';
 
 const $ = (id) => document.getElementById(id);
 const won = (n) => (n == null ? '—' : n.toLocaleString('ko-KR'));
@@ -36,6 +37,120 @@ let stops = [
   { role: 'goal', label: '도착지', text: '', picked: null },
 ];
 let maxWaypoints = 5;
+
+/* ---------------- 저장된 루트 ---------------- */
+const PRESET_KEY = 'route-fuel-presets-v1';
+/** 처음 열었을 때도 고를 게 있도록 넣어둔 예시. 저장 목록과 섞이지 않게 따로 둔다. */
+const EXAMPLES = [{
+  name: '거제면사무소 → 구미 사곡역',
+  route: JSON.stringify([
+    { n: '거제면사무소', y: 34.85106, x: 128.5904 },
+    { n: '합천읍', y: 35.566, x: 128.1579 },
+    { n: '구미 사곡역', y: 36.1002, x: 128.3533 },
+  ]),
+}];
+
+function loadPresets() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRESET_KEY) || '[]');
+    return Array.isArray(raw) ? raw.filter((p) => p?.name && p?.route) : [];
+  } catch { return []; }
+}
+function storePresets(list) {
+  try { localStorage.setItem(PRESET_KEY, JSON.stringify(list)); } catch { /* 저장 실패는 조회에 영향 없다 */ }
+}
+
+function renderPresets(selected = '') {
+  const sel = $('preset');
+  const mine = loadPresets();
+  sel.innerHTML = '<option value="">새 루트</option>'
+    + (mine.length ? `<optgroup label="내 루트">${
+        mine.map((p) => `<option value="mine:${esc(p.name)}">${esc(p.name)}</option>`).join('')}</optgroup>` : '')
+    + `<optgroup label="예시">${
+        EXAMPLES.map((p, i) => `<option value="ex:${i}">${esc(p.name)}</option>`).join('')}</optgroup>`;
+  sel.value = selected;
+  if (sel.value !== selected) sel.value = '';
+  $('delPreset').disabled = !sel.value.startsWith('mine:');
+}
+
+function applyStops(next) {
+  if (!next?.length) return false;
+  stops = next;
+  renderStops();
+  return true;
+}
+
+$('preset').addEventListener('change', (e) => {
+  const v = e.target.value;
+  $('delPreset').disabled = !v.startsWith('mine:');
+  if (!v) return;
+  const src = v.startsWith('ex:')
+    ? EXAMPLES[Number(v.slice(3))]
+    : loadPresets().find((p) => `mine:${p.name}` === v);
+  if (!src) return;
+  if (!applyStops(decodeRoute(src.route))) {
+    banner('errorBanner', '저장된 루트를 읽지 못했습니다. 다시 저장해 주세요.');
+  } else {
+    banner('errorBanner', '');
+  }
+});
+
+$('savePreset').addEventListener('click', () => {
+  const route = encodeRoute(stops);
+  if (!route) {
+    banner('errorBanner', '저장하려면 출발지와 도착지를 먼저 지정해 주세요.');
+    return;
+  }
+  const suggested = routeName(stops);
+  const name = (window.prompt('이 루트를 어떤 이름으로 저장할까요?', suggested) || '').trim();
+  if (!name) return;
+  const list = loadPresets().filter((p) => p.name !== name);
+  list.unshift({ name, route });
+  storePresets(list.slice(0, 30));
+  renderPresets(`mine:${name}`);
+  flash(`'${name}' 저장했습니다.`);
+});
+
+$('delPreset').addEventListener('click', () => {
+  const v = $('preset').value;
+  if (!v.startsWith('mine:')) return;
+  const name = v.slice(5);
+  storePresets(loadPresets().filter((p) => p.name !== name));
+  renderPresets('');
+  flash(`'${name}' 삭제했습니다.`);
+});
+
+$('swap').addEventListener('click', () => {
+  stops = reverseStops(stops);
+  renderStops();
+  $('preset').value = '';
+  $('delPreset').disabled = true;
+  flash('돌아오는 길로 뒤집었습니다.');
+});
+
+$('copyLink').addEventListener('click', async () => {
+  const route = encodeRoute(stops);
+  if (!route) {
+    banner('errorBanner', '링크를 만들려면 출발지와 도착지를 먼저 지정해 주세요.');
+    return;
+  }
+  const url = `${location.origin}${location.pathname}?r=${encodeURIComponent(route)}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    flash('링크를 복사했습니다.');
+  } catch {
+    // 클립보드 권한이 없으면 주소창에 올려 직접 복사하게 한다.
+    history.replaceState(null, '', url);
+    flash('주소창의 링크를 복사해 쓰세요.');
+  }
+});
+
+let flashTimer;
+function flash(text) {
+  $('progress').textContent = text;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { $('progress').textContent = ''; }, 3000);
+}
 
 function renderStops() {
   const box = $('stops');
@@ -395,5 +510,13 @@ fetch('/api/config').then((r) => r.json()).then((cfg) => {
     banner('modeBanner', '<b>TMAP_APP_KEY 가 없습니다.</b> 장소 검색이 꺼지고, 경로는 정거장 사이를 직선으로 이은 근사값으로 계산됩니다. '
       + '<code>.env</code> 에 키를 넣고 서버를 다시 시작하면 실제 도로 경로로 조회합니다.');
   }
+  bootStops();
+}).catch(() => bootStops());
+
+function bootStops() {
+  const shared = decodeRoute(new URLSearchParams(location.search).get('r'));
+  if (shared) stops = shared;
   renderStops();
-}).catch(() => renderStops());
+  renderPresets('');
+  if (shared) flash('링크에 담긴 루트를 불러왔습니다. 조회를 눌러주세요.');
+}

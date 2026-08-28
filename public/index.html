@@ -27,6 +27,16 @@
 
   <section class="planner">
     <h2>경로</h2>
+    <div class="route-bar">
+      <div class="field grow">
+        <label for="preset">저장된 루트</label>
+        <select id="preset"><option value="">새 루트</option></select>
+      </div>
+      <button class="btn" id="swap" type="button" title="돌아오는 길로 뒤집기">⇅ 출발↔도착</button>
+      <button class="btn" id="savePreset" type="button">저장</button>
+      <button class="btn" id="delPreset" type="button" disabled>삭제</button>
+      <button class="btn" id="copyLink" type="button">링크 복사</button>
+    </div>
     <div class="stops" id="stops"></div>
     <div class="plan-actions">
       <button class="btn" id="addStop" type="button">＋ 경유지 추가</button>

@@ -333,3 +333,14 @@ ul.stations{list-style:none; margin:0; padding:0}
   .planner{padding:14px}
   .stop{gap:8px}
 }
+
+/* 저장된 루트 바 */
+.route-bar{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:14px;
+  padding-bottom:14px; border-bottom:1px solid var(--line)}
+.route-bar .field label{white-space:nowrap}
+.route-bar .field.grow{flex:1 1 240px; min-width:0}
+.route-bar .field.grow select{width:100%; min-width:0}
+.route-bar .btn{white-space:nowrap}
+@media (max-width:620px){
+  .route-bar .btn{flex:1 1 auto; justify-content:center}
+}
