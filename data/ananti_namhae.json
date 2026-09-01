@@ -22,8 +22,8 @@
     "par": 72,
     "unit": "m",
     "nines": [
-      { "key": "out", "name": "OUT", "note": "1~9번홀 — 실제 코스 명칭 확인 필요" },
-      { "key": "in", "name": "IN", "note": "10~18번홀 — 실제 코스 명칭 확인 필요" }
+      { "key": "out", "name": "OUT COURSE", "note": "1~9번홀" },
+      { "key": "in", "name": "IN COURSE", "note": "10~18번홀" }
     ],
     "notes": [
       "구 힐튼 남해 골프 & 스파 리조트. 남해 남쪽 해안 절벽 지형에 조성된 코스입니다.",
@@ -70,7 +70,24 @@
   },
 
   "holes": [
-    { "nine": "out", "hole": 1,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    {
+      "_출처": "아난티 남해 공식 홈페이지 코스안내(ananti.kr/ko/namhae/NH0201) HOLE 1 화면. 거리는 사이트가 병기한 미터값.",
+      "nine": "out", "hole": 1, "par": 4, "handicap": 15,
+      "shape": "straight", "elevation": "downhill",
+      "tees": { "black": 323, "blue": 301, "white": 281, "red": 261 },
+      "green": { "depth": 27, "tier": "", "break": "" },
+      "hazards": [
+        { "type": "bunker", "side": "greenside_right", "note": "그린 앞 우측 — 그린 상세도에 표시된 유일한 그린 벙커" }
+      ],
+      "keys": [
+        "10m 하향 스타트 홀 — 실제 비거리가 더 나간다. 클럽을 짧게 잡고 첫 홀 오버 주의",
+        "공식 안내상 '무난히 파를 잡을 수 있는 홀'. 몸이 덜 풀린 상태이니 거리보다 방향"
+      ],
+      "bogey_plan": [],
+      "note": "공식 코스안내 설명: 스타트 홀로, 10m 하향으로 자리 잡아 실제 비거리가 더 나아가게 합니다. 티 그라운드 앞쪽으로 아름다운 꽃을 심어 상쾌한 출발을 도우며, 무난히 파를 잡을 수 있는 홀입니다.",
+      "image": "images/ananti_hole01.jpg",
+      "green_image": "images/ananti_hole01_green.jpg"
+    },
     { "nine": "out", "hole": 2,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
     { "nine": "out", "hole": 3,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
     { "nine": "out", "hole": 4,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },

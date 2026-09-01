@@ -434,7 +434,10 @@ def strategy_page(c: Canvas, course: Course) -> None:
 
 def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
     nine = course.nine_name(hole.nine)
-    _page_header(c, f"{hole.hole}번홀", f"{nine} · {'OUT' if hole.hole <= 9 else 'IN'}")
+    half = "OUT" if hole.hole <= 9 else "IN"
+    # 코스 이름 자체가 'OUT COURSE' 같은 형태면 OUT/IN 을 덧붙이지 않는다.
+    subtitle = nine if half in nine.upper() else f"{nine} · {half}"
+    _page_header(c, f"{hole.hole}번홀", subtitle)
 
     # 상단 파/핸디캡/거리 요약 바
     bar_y = PAGE_H - 40 * mm
@@ -479,6 +482,15 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
     # 그린 정보
     g = hole.green
     y = _sub(c, "그린", text_x, y)
+
+    # 그린 상세도가 있으면 오른쪽에 붙이고, 글은 왼쪽 폭만 쓴다.
+    green_img = _resolve(hole.green_image)
+    txt_w = text_w
+    if green_img:
+        gi_w = min(text_w * 0.42, 42 * mm)
+        gi_h = _draw_green_map(c, text_x + text_w - gi_w, y, gi_w, 40 * mm, green_img)
+        txt_w = text_w - gi_w - 5 * mm
+
     green_bits = []
     if g.get("depth"):
         green_bits.append(f"깊이 {g['depth']}m")
@@ -487,13 +499,15 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
     if g.get("tier"):
         green_bits.append(str(g["tier"]))
     if green_bits:
-        y = para(c, " · ".join(green_bits), text_x, y, text_w, size=8.3, leading=11)
+        y = para(c, " · ".join(green_bits), text_x, y, txt_w, size=8.3, leading=11)
     if g.get("break"):
-        y = para(c, f"브레이크: {g['break']}", text_x, y, text_w, size=8.3, leading=11)
+        y = para(c, f"브레이크: {g['break']}", text_x, y, txt_w, size=8.3, leading=11)
     if not green_bits and not g.get("break"):
         for _ in range(2):
-            blank_line(c, text_x, y + 2, text_w)
+            blank_line(c, text_x, y + 2, txt_w)
             y -= 12
+    if green_img:
+        y = min(y, gi_h) - 4
     y -= 6
 
     # 해저드
@@ -585,13 +599,18 @@ def log_page(c: Canvas, course: Course) -> None:
 # 공통 파츠
 # --------------------------------------------------------------------------
 
-def _image_path(hole: Hole) -> str | None:
-    """홀에 지정된 실제 코스안내도 이미지 경로. 없거나 파일이 없으면 None."""
-    raw = (hole.image or "").strip()
+def _resolve(raw: str) -> str | None:
+    """저장소 기준 상대경로를 절대경로로. 파일이 없으면 None."""
+    raw = (raw or "").strip()
     if not raw:
         return None
     path = raw if os.path.isabs(raw) else os.path.join(_REPO_ROOT, raw)
     return path if os.path.isfile(path) else None
+
+
+def _image_path(hole: Hole) -> str | None:
+    """홀 전체 코스안내도 이미지 경로."""
+    return _resolve(hole.image)
 
 
 def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: str) -> float:
@@ -621,6 +640,27 @@ def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: st
     c.setFillColor(C_MUTED)
     c.drawString(x + 1, dy - 7, "실제 코스안내도 (골프장 제공)")
     return dh + cap_h
+
+
+def _draw_green_map(c: Canvas, x: float, y: float, w: float, max_h: float, path: str) -> float:
+    """그린 상세도를 (x, y) 오른쪽 위 기준으로 넣고, 이미지 아래쪽 y를 돌려준다."""
+    try:
+        reader = ImageReader(path)
+        iw, ih = reader.getSize()
+    except Exception:
+        return y
+
+    scale = min(w / iw, max_h / ih)
+    dw, dh = iw * scale, ih * scale
+    dy = y + 6 - dh
+    c.drawImage(reader, x, dy, dw, dh, preserveAspectRatio=True, anchor="n", mask="auto")
+    c.setStrokeColor(C_LINE)
+    c.setLineWidth(0.5)
+    c.rect(x, dy, dw, dh, stroke=1, fill=0)
+    c.setFont(fonts.regular(), 5.5)
+    c.setFillColor(C_MUTED)
+    c.drawString(x, dy - 6, "그린 상세도 (골프장 제공)")
+    return dy - 10
 
 
 def _round_grid(c: Canvas, course: Course, x0: float, y: float, w: float) -> float:

@@ -70,8 +70,10 @@ class Hole:
     hazards: list[Hazard]
     keys: list[str]
     bogey_plan: list[str]
+    single_plan: list[str]
     note: str
-    image: str = ""  # 골프장이 제공하는 실제 코스안내도 이미지 경로
+    image: str = ""  # 골프장이 제공하는 홀 전체 코스안내도 이미지 경로
+    green_image: str = ""  # 그린 상세도 이미지 경로 (그린 정보 옆에 작게 들어감)
 
     @property
     def known(self) -> bool:
@@ -171,8 +173,10 @@ def load(path: str) -> Course:
                 hazards=[Hazard.parse(h) for h in item.get("hazards", [])],
                 keys=[str(s) for s in item.get("keys", [])],
                 bogey_plan=[str(s) for s in item.get("bogey_plan", [])],
+                single_plan=[str(s) for s in item.get("single_plan", [])],
                 note=str(item.get("note", "")),
                 image=str(item.get("image", "") or ""),
+                green_image=str(item.get("green_image", "") or ""),
             )
         )
 
@@ -269,6 +273,64 @@ def bogey_plan(hole: Hole, player: dict[str, Any], tee_key: str) -> list[str]:
         f"세컨 {second:.0f}m — {club_with(player, second)} 그린 {layup_target:.0f}m 앞 평지까지",
         f"서드 {layup_target:.0f}m — {club_with(player, layup_target)} 그린 중앙",
         "2퍼트 보기. 세컨이 잘 맞으면 웨지로 파 노림",
+    ]
+
+
+def single_plan(hole: Hole, player: dict[str, Any], tee_key: str) -> list[str]:
+    """싱글(한 자리 핸디) 목표 배분 — 파를 지키는 배분.
+
+    보기 플랜이 '더블보기를 지우는' 배분이라면, 이쪽은 'GIR 을 늘리고
+    숏사이드를 피하는' 배분이다. 홀 데이터의 single_plan 이 있으면 그것을 쓴다.
+    """
+    if hole.single_plan:
+        return hole.single_plan
+    if not hole.par:
+        return []
+
+    total = hole.length(tee_key)
+    clubs = player.get("clubs") or []
+    driver = float(next((c["dist"] for c in clubs if "드라이버" in c["name"]), 200))
+    longest = max((float(c["dist"]) for c in clubs), default=200.0)
+
+    if hole.par == 3:
+        return [
+            f"티샷 {total:.0f}m — {club_with(player, total)} 그린 중앙. 핀이 에지 5m 안쪽이면 중앙 고수",
+            "미스는 반드시 넓은 쪽으로. 숏사이드에 남기면 파 확률이 절반으로 떨어진다",
+            "온그린 2퍼트 파. 그린 놓쳐도 넓은 쪽이면 업앤다운으로 파",
+        ]
+
+    if hole.par == 4:
+        rest = total - driver
+        if rest < 60:
+            club = "3번 우드" if any("우드" in c["name"] for c in clubs) else "롱아이언"
+            lay = min(driver, total - 100)
+            return [
+                f"티샷 {lay:.0f}m — {club}로 끊어 풀웨지 거리를 남긴다. 드라이버는 각도만 좁힌다",
+                f"세컨 100m — {club_with(player, 100)} 그린 중앙, 핀 방향으로 4m만",
+                "2퍼트 파. 버디 퍼트가 서면 그날 흐름이 바뀐다",
+            ]
+        return [
+            f"티샷 {driver:.0f}m — 페어웨이 안착이 목표. 벙커·러프는 GIR 을 그대로 깎는다",
+            f"세컨 {rest:.0f}m — {club_with(player, rest)} 그린 중앙 기준, 안전한 쪽으로 4m 이동해 조준",
+            "핀이 에지 가까이 꽂혔으면 무시. 그린 한가운데가 항상 정답",
+            "2퍼트 파, 붙으면 버디",
+        ]
+
+    # par 5 — 2온 판단
+    after_drive = total - driver
+    if after_drive <= longest:
+        return [
+            f"티샷 {driver:.0f}m — 2온을 보려면 페어웨이 필수. 러프면 그 시점에 레이업으로 전환",
+            f"세컨 {after_drive:.0f}m — 그린 앞이 트여 있고 라이가 좋을 때만 {club_with(player, after_drive)} 2온 시도",
+            "조건이 하나라도 안 맞으면 100m 남기고 레이업. 2온 실패의 대가는 보기가 아니라 더블",
+            "2퍼트 파, 2온 성공하면 버디 기회",
+        ]
+    layup = after_drive - 100
+    return [
+        f"티샷 {driver:.0f}m — 페어웨이 안착",
+        f"세컨 {layup:.0f}m — {club_with(player, layup)} 100m 남기고 평지로. 어중간한 60m 를 남기지 않는다",
+        f"서드 100m — {club_with(player, 100)} 핀 공략. 여기가 버디를 만드는 샷",
+        "2퍼트 파",
     ]
 
 
