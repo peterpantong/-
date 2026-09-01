@@ -24,6 +24,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=None, help=f"출력 PDF 경로 (기본: {DEFAULT_OUT})")
     ap.add_argument("--tee", default="white", help="플랜/도면 기준 티 (기본: white)")
     ap.add_argument(
+        "--level",
+        default="bogey",
+        choices=["bogey", "single", "both"],
+        help="홀 페이지에 실을 샷 플랜 (기본: bogey). 전략 페이지는 항상 둘 다 들어갑니다",
+    )
+    ap.add_argument(
         "--holes",
         default=None,
         help="일부 홀만 생성 (예: 1, 1-3, 1,5,9). 생략하면 전체 18홀",
@@ -61,13 +67,14 @@ def main(argv: list[str] | None = None) -> int:
 
     out_path = args.out or DEFAULT_OUT
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-    book.build(crs, out_path, args.tee)
+    book.build(crs, out_path, args.tee, args.level)
 
     filled = sum(1 for h in crs.holes if h.known and h.par)
     with_map = sum(1 for h in crs.holes if h.image)
     print(f"생성 완료: {out_path}")
     print(f"  폰트      : {font_desc}")
     print(f"  기준 티   : {args.tee}")
+    print(f"  플랜      : {args.level}")
     print(f"  홀        : {', '.join(str(h.hole) for h in crs.holes)}")
     print(f"  데이터    : {filled}/{len(crs.holes)}홀 입력됨, 코스안내도 {with_map}장")
     if filled < len(crs.holes):

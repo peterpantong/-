@@ -13,7 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen.canvas import Canvas
 
 from . import diagram, fonts
-from .course import Course, Hole, bogey_plan, general_keys
+from .course import Course, Hole, bogey_plan, general_keys, single_plan
 
 PAGE_W, PAGE_H = A4
 MARGIN = 14 * mm
@@ -109,6 +109,29 @@ def blank_line(c: Canvas, x: float, y: float, w: float) -> None:
 
 def fmt(v: float | None, suffix: str = "") -> str | None:
     return None if v is None else f"{v:.0f}{suffix}"
+
+
+LEVELS = ("bogey", "single", "both")
+
+
+def _plan_kinds(level: str) -> tuple[str, ...]:
+    """홀 페이지에 실을 플랜 종류."""
+    if level == "single":
+        return ("single",)
+    if level == "both":
+        return ("bogey", "single")
+    return ("bogey",)
+
+
+def _declared_par(course: Course) -> int:
+    """코스 전체 파. --holes 로 일부만 뽑아도 설명 문구는 전체 기준이어야 한다."""
+    v = course.meta.get("par")
+    return int(v) if v else (course.par_total() or 72)
+
+
+def _declared_holes(course: Course) -> int:
+    v = course.meta.get("holes")
+    return int(v) if v else (len(course.holes) or 18)
 
 
 def _data_ref(course: Course) -> str:
@@ -207,9 +230,9 @@ def cover(c: Canvas, course: Course) -> None:
     c.drawString(MARGIN, uy, "이 야디지북 쓰는 법")
     uy -= 15
     for item in (
-        "라운드 전날: '보기플레이 기본 전략' 페이지를 읽고, 드라이버를 뺄 홀 3개를 정한다.",
+        "라운드 전날: 전략 페이지 두 장(보기플레이 / 싱글플레이)을 읽고, 드라이버를 뺄 홀 3개를 정한다.",
         "홀 도면: 흰 점선 원은 티샷 목표 지점, 흰 숫자는 그린까지 남은 거리(m).",
-        "라운드 중: 판단은 티잉그라운드에서 끝내고, 그 다음부터는 '보기 플랜'대로만 친다.",
+        "라운드 중: 판단은 티잉그라운드에서 끝내고, 그 다음부터는 홀 페이지의 플랜대로만 친다.",
         "라운드 후: 마지막 기록 페이지에 스코어·퍼트·벌타를 적고 3줄 회고를 남긴다.",
     ):
         uy = bullet(c, item, MARGIN, uy, PAGE_W - 2 * MARGIN, size=8.3, leading=11) - 3
@@ -314,8 +337,9 @@ def scorecard(c: Canvas, course: Course) -> None:
     c.drawString(x0, y, "보기플레이 목표 스코어")
     y -= 13
     target = int(course.player.get("target_score", 90))
-    par_total = course.par_total() or int(course.meta.get("par", 72))
-    all_bogey = par_total + 18
+    par_total = _declared_par(course)
+    n_holes = _declared_holes(course)
+    all_bogey = par_total + n_holes
     gap = all_bogey - target
     if gap > 0:
         how = f"여기서 파를 {gap}개 잡으면 목표 {target}타"
@@ -325,7 +349,7 @@ def scorecard(c: Canvas, course: Course) -> None:
         how = f"목표 {target}타는 전 홀 보기보다 {-gap}타 여유가 있는 스코어"
     para(
         c,
-        f"18홀 전 홀 보기 = {all_bogey}타. {how}입니다. 더블보기 하나가 파 하나를 지우므로, "
+        f"{n_holes}홀 전 홀 보기 = {all_bogey}타. {how}입니다. 더블보기 하나가 파 하나를 지우므로, "
         f"각 홀 페이지의 '보기 플랜'은 파를 노리는 배분이 아니라 더블보기를 지우는 배분입니다.",
         x0, y, table_w, size=8.5, leading=11.5,
     )
@@ -432,7 +456,112 @@ def strategy_page(c: Canvas, course: Course) -> None:
     c.showPage()
 
 
-def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
+def single_strategy_page(c: Canvas, course: Course) -> None:
+    _page_header(c, "싱글플레이 전략", "한 자리 핸디로 가는 길")
+    x0, w = MARGIN, PAGE_W - 2 * MARGIN
+    y = PAGE_H - 34 * mm
+
+    par_total = _declared_par(course)
+    n_holes = _declared_holes(course)
+
+    # 싱글 기준선: 파 + 9 (한 자리 핸디의 상한)
+    target = par_total + 9
+    over = target - par_total
+    if 0 <= over <= n_holes:
+        breakdown = f"'파 {n_holes - over}개 + 보기 {over}개 + 더블보기 0개'"
+    else:
+        breakdown = "'보기를 최소로, 더블보기는 0개'"
+    y = para(
+        c,
+        f"싱글은 버디를 잡아서 만들어지지 않습니다. 파 {par_total} 코스에서 {target}타는 "
+        f"{breakdown} 로 나오는 숫자입니다. 아래 항목은 전부 '파를 지키는' 것이지 "
+        "'버디를 만드는' 것이 아닙니다.",
+        x0, y, w, size=8.7, leading=11.5,
+    )
+    y -= 10
+
+    sections = [
+        (
+            "1. 목표는 스코어가 아니라 지표",
+            [
+                "GIR(레귤러 온) 7~9개 — 싱글과 보기플레이를 가르는 단 하나의 지표.",
+                "페어웨이 안착 8홀 이상 — 러프에서 그린을 노리면 GIR 이 절반으로 떨어진다.",
+                "3퍼트 1개 이하, 파세이브(업앤다운) 50% 이상.",
+                "이 네 개를 라운드마다 적으면, 어디서 타수가 새는지 두 라운드면 보인다.",
+            ],
+        ),
+        (
+            "2. 티샷 — 드라이버를 '고르는' 것이 실력",
+            [
+                "드라이버는 페어웨이가 넓고 OB·해저드가 없는 홀에서만. 나머지는 우드·유틸.",
+                "티잉그라운드는 위험한 쪽 끝에 서서 안전한 쪽으로 조준선을 연다.",
+                "300m 이하 파4에서 드라이버로 70m 를 남기면 오히려 어렵다. 100m 를 남긴다.",
+            ],
+        ),
+        (
+            "3. 세컨 — 핀이 아니라 그린 중앙 + 안전한 쪽",
+            [
+                "기본 조준은 그린 중앙. 거기서 안전한 쪽으로 4m 만 옮긴다.",
+                "핀이 에지 5m 안쪽에 꽂혔으면 무조건 무시. 숏사이드가 보기를 만든다.",
+                "그린 뒤가 트인 홀에서만 한 클럽 길게. 앞에 벙커·해저드면 무조건 길게.",
+                "라이가 나쁘면 그 시점에 목표를 그린에서 '그린 앞 안전지대'로 내린다.",
+            ],
+        ),
+        (
+            "4. 파5 — 2온은 세 조건이 다 맞을 때만",
+            [
+                "① 티샷이 페어웨이  ② 남은 거리가 평소 최장 클럽 안쪽  ③ 그린 앞이 트여 있음.",
+                "하나라도 어긋나면 100m 남기고 레이업. 2온 실패의 대가는 보기가 아니라 더블이다.",
+                "레이업은 '어중간한 60m'가 아니라 '풀스윙 웨지 거리'로 맞춘다.",
+            ],
+        ),
+        (
+            "5. 숏게임 · 퍼팅 — 파를 지키는 마지막 구간",
+            [
+                "굴릴 수 있으면 굴린다. 로브샷은 넘길 것이 있을 때만 쓰는 마지막 수단.",
+                "60m 이내에서 두 번에 끝내는 확률이 싱글을 만든다. 붙이는 게 아니라 '2퍼트 안에'.",
+                "롱퍼트는 라인보다 거리. 3m 이내는 라인. 홀 지나 1m 를 항상 지킨다.",
+            ],
+        ),
+    ]
+
+    for title, items in sections:
+        c.setFont(fonts.bold(), 10.5)
+        c.setFillColor(C_ACCENT)
+        c.drawString(x0, y, title)
+        y -= 15
+        for item in items:
+            y = bullet(c, item, x0 + 2, y, w - 2, size=8.7, leading=11.5) - 4
+        y -= 7
+
+    # 지표 기록표
+    c.setFont(fonts.bold(), 10.5)
+    c.setFillColor(C_ACCENT)
+    c.drawString(x0, y, "라운드별 지표 기록")
+    y -= 8
+
+    cols = ["날짜", "스코어", "GIR", "페어웨이", "퍼트", "업앤다운", "더블+"]
+    widths = [w * 0.22] + [w * 0.13] * 6
+    row_h = 8 * mm
+    for r in range(6):
+        ry = y - r * row_h
+        cx = x0
+        for i, col in enumerate(cols):
+            c.setStrokeColor(C_LINE)
+            c.setLineWidth(0.5)
+            c.setFillColor(C_ACCENT_LT if r == 0 else HexColor("#FFFFFF"))
+            c.rect(cx, ry - row_h, widths[i], row_h, stroke=1, fill=1)
+            if r == 0:
+                c.setFont(fonts.bold(), 8)
+                c.setFillColor(C_INK)
+                c.drawCentredString(cx + widths[i] / 2, ry - row_h + 2.6 * mm, col)
+            cx += widths[i]
+
+    _footer(c, course.meta.get("name", ""))
+    c.showPage()
+
+
+def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = "bogey") -> None:
     nine = course.nine_name(hole.nine)
     half = "OUT" if hole.hole <= 9 else "IN"
     # 코스 이름 자체가 'OUT COURSE' 같은 형태면 OUT/IN 을 덧붙이지 않는다.
@@ -534,23 +663,31 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str) -> None:
             y -= 12
     y -= 6
 
-    # 보기 플랜
-    plan = bogey_plan(hole, course.player, tee_key)
-    plan_title = f"보기 플랜 (목표 {hole.par + 1}타)" if hole.par else "보기 플랜"
-    y = _sub(c, plan_title, text_x, y)
-    if plan:
-        for i, step in enumerate(plan, 1):
-            y = bullet(c, step, text_x, y, text_w, size=8.3, leading=10.8, marker=f"{i}") - 2
-        if not hole.bogey_plan:
-            c.setFont(fonts.regular(), 6.5)
-            c.setFillColor(C_MUTED)
-            c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
-            y -= 10
-    else:
-        for _ in range(4):
-            blank_line(c, text_x, y + 2, text_w)
-            y -= 12
-    y -= 6
+    # 샷 플랜 — level 에 따라 보기 / 싱글 / 둘 다
+    for kind in _plan_kinds(level):
+        if kind == "bogey":
+            steps = bogey_plan(hole, course.player, tee_key)
+            manual = bool(hole.bogey_plan)
+            title = f"보기 플랜 (목표 {hole.par + 1}타)" if hole.par else "보기 플랜"
+        else:
+            steps = single_plan(hole, course.player, tee_key)
+            manual = bool(hole.single_plan)
+            title = f"싱글 플랜 (목표 {hole.par}타)" if hole.par else "싱글 플랜"
+
+        y = _sub(c, title, text_x, y)
+        if steps:
+            for i, step in enumerate(steps, 1):
+                y = bullet(c, step, text_x, y, text_w, size=8.3, leading=10.8, marker=f"{i}") - 2
+            if not manual:
+                c.setFont(fonts.regular(), 6.5)
+                c.setFillColor(C_MUTED)
+                c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
+                y -= 10
+        else:
+            for _ in range(4):
+                blank_line(c, text_x, y + 2, text_w)
+                y -= 12
+        y -= 6
 
     # 메모
     y = _sub(c, "라운드 메모", text_x, y)
@@ -750,7 +887,7 @@ def _footer(c: Canvas, text: str) -> None:
 
 # --------------------------------------------------------------------------
 
-def build(course: Course, out_path: str, tee_key: str) -> None:
+def build(course: Course, out_path: str, tee_key: str, level: str = "bogey") -> None:
     c = Canvas(out_path, pagesize=A4)
     meta = course.meta
     c.setTitle(f"{meta.get('name', '')} {meta.get('subtitle', '')}")
@@ -760,7 +897,8 @@ def build(course: Course, out_path: str, tee_key: str) -> None:
     cover(c, course)
     scorecard(c, course)
     strategy_page(c, course)
+    single_strategy_page(c, course)
     for hole in course.holes:
-        hole_page(c, course, hole, tee_key)
+        hole_page(c, course, hole, tee_key, level)
     log_page(c, course)
     c.save()
