@@ -98,6 +98,8 @@ class Course:
     tees: list[dict[str, Any]]
     player: dict[str, Any]
     holes: list[Hole] = field(default_factory=list)
+    strategy: dict[str, Any] = field(default_factory=dict)
+    source_path: str = ""  # 어떤 JSON 에서 왔는지 (안내 문구에 표시)
 
     @property
     def complete(self) -> bool:
@@ -179,7 +181,14 @@ def load(path: str) -> Course:
     if numbers != list(range(1, len(holes) + 1)):
         raise ValueError(f"홀 번호가 1..{len(holes)} 연속이 아닙니다: {numbers}")
 
-    return Course(meta=meta, tees=tees, player=raw.get("player", {}), holes=holes)
+    return Course(
+        meta=meta,
+        tees=tees,
+        player=raw.get("player", {}),
+        holes=holes,
+        strategy=raw.get("strategy", {}) or {},
+        source_path=path,
+    )
 
 
 # --------------------------------------------------------------------------

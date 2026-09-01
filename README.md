@@ -1,9 +1,15 @@
-# 부곡CC 홀별 코스공략 야디지북
+# 홀별 코스공략 야디지북
 
 > 전인민의 보기플레이를 위하여
 
-부곡컨트리클럽(경남 창녕) 라운드용 **홀별 코스공략 야디지북 PDF** 생성기.
+라운드용 **홀별 코스공략 야디지북 PDF** 생성기.
 JSON 한 개에 코스 데이터를 적어 넣으면 A4 22페이지짜리 야디지북이 나옵니다.
+코스에 종속된 문구는 전부 데이터에 있고 코드에는 없어서, 골프장을 추가하려면 JSON만 하나 더 만들면 됩니다.
+
+| 코스 | 데이터 파일 | 상태 |
+|---|---|---|
+| 부곡컨트리클럽 (경남 창녕) | `data/bugok_cc.json` | 거리·파 미입력 |
+| 아난티 남해 (경남 남해) | `data/ananti_namhae.json` | 거리·파 미입력 |
 
 ## 구성
 
@@ -24,6 +30,7 @@ JSON 한 개에 코스 데이터를 적어 넣으면 A4 22페이지짜리 야디
 pip install -r requirements.txt
 
 python build.py                                  # data/bugok_cc.json -> out/부곡CC_야디지북.pdf
+python build.py --data data/ananti_namhae.json --out out/아난티남해_야디지북.pdf
 python build.py --tee blue                       # 기준 티 변경 (black/blue/white/red)
 python build.py --holes 1 --out out/1번홀_샘플.pdf # 일부 홀만 (1 / 1-3 / 1,5,9)
 python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
@@ -43,9 +50,9 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 
 ## ⚠️ 거리 데이터는 직접 채워야 합니다
 
-`data/bugok_cc.json` 의 **파 / 핸디캡 / 티별 거리는 비어 있습니다(null)**.
-부곡CC 공식 홈페이지가 이 작업 환경의 네트워크 정책에서 차단되어 실제 스코어카드를
-가져올 수 없었고, 확인되지 않은 거리를 지어내지 않았습니다.
+두 데이터 파일 모두 **파 / 핸디캡 / 티별 거리가 비어 있습니다(null)**.
+골프장 공식 홈페이지(`bkcc.co.kr`, `ananti.kr`)가 이 작업 환경의 네트워크 정책에서
+차단되어 실제 스코어카드를 가져올 수 없었고, 확인되지 않은 거리를 지어내지 않았습니다.
 
 지금 상태로 빌드해도 **라운드 중 직접 적어 넣는 백지 야디지북**으로 바로 쓸 수 있고,
 아래 값을 채우면 모든 표·도면·플랜이 실제 값으로 채워집니다.
@@ -80,8 +87,23 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 
 `player.clubs` 에 본인 평균 캐리 거리를 넣으면 홀별 보기 플랜의 클럽 추천이 함께 바뀝니다.
 
-실제 값을 확인할 곳: 부곡CC 스코어카드, 공식 홈페이지 코스안내(<https://www.bkcc.co.kr/sub1_2>),
-또는 클럽하우스 문의(055-521-0707).
+실제 값을 확인할 곳: 스코어카드, 골프장 공식 홈페이지 코스안내, 또는 클럽하우스 문의.
+부곡CC <https://www.bkcc.co.kr/sub1_2> · 055-521-0707 / 아난티 남해 <https://ananti.kr/ko/namhae/NH0201>
+
+## 다른 골프장 추가하기
+
+`data/` 에 JSON 을 하나 더 만들면 됩니다. 코스 이름·주소·코스별 공략 문구까지 전부 데이터에 있습니다.
+
+```jsonc
+{
+  "course": { "name": "...", "holes": 18, "par": 72, "nines": [...], "notes": [...] },
+  "strategy": {
+    "course_notes_title": "해안 코스 · 바람 보정",   // 전략 페이지에 이 코스만의 섹션으로 들어감
+    "course_notes": ["...", "..."]                  // 생략하면 그 섹션 없이 번호가 자동으로 당겨짐
+  },
+  "tees": [...], "player": {...}, "holes": [...]
+}
+```
 
 ## 보기 플랜 자동 계산
 
@@ -107,6 +129,8 @@ yardagebook/course.py     데이터 로딩·검증, 보기 플랜 계산
 yardagebook/diagram.py    홀 도면 벡터 드로잉
 yardagebook/book.py       페이지 레이아웃
 yardagebook/fonts.py      한글 폰트 탐색·등록
-data/bugok_cc.json        ← 실제 코스 데이터 (여기를 채우세요)
+data/bugok_cc.json        부곡CC 코스 데이터 (여기를 채우세요)
+data/ananti_namhae.json   아난티 남해 코스 데이터 (여기를 채우세요)
 data/sample_filled.json   레이아웃 확인용 예시 데이터 (실제 거리 아님)
+images/                   골프장 제공 코스안내도 이미지
 ```

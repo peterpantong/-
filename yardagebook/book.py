@@ -111,6 +111,16 @@ def fmt(v: float | None, suffix: str = "") -> str | None:
     return None if v is None else f"{v:.0f}{suffix}"
 
 
+def _data_ref(course: Course) -> str:
+    """안내 문구에 쓸 데이터 파일 경로 (저장소 기준 상대경로)."""
+    if not course.source_path:
+        return "코스 데이터 JSON"
+    try:
+        return os.path.relpath(os.path.abspath(course.source_path), _REPO_ROOT)
+    except ValueError:
+        return os.path.basename(course.source_path)
+
+
 # --------------------------------------------------------------------------
 # 페이지
 # --------------------------------------------------------------------------
@@ -160,7 +170,8 @@ def cover(c: Canvas, course: Course) -> None:
         x += 55 * mm
 
     y -= 18 * mm
-    for line in (meta.get("address", ""), f"TEL {meta.get('tel', '')}", meta.get("web", "")):
+    tel = str(meta.get("tel", "") or "").strip()
+    for line in (meta.get("address", ""), f"TEL {tel}" if tel else "", meta.get("web", "")):
         if line.strip():
             c.setFont(fonts.regular(), 9)
             c.setFillColor(C_MUTED)
@@ -184,7 +195,7 @@ def cover(c: Canvas, course: Course) -> None:
         c.drawString(MARGIN + 8, ty, "거리 · 파 데이터 미입력")
         para(
             c,
-            "스코어카드의 홀별 파/핸디캡/티별 거리를 data/bugok_cc.json 에 채운 뒤 다시 빌드하면 "
+            f"스코어카드의 홀별 파/핸디캡/티별 거리를 {_data_ref(course)} 에 채운 뒤 다시 빌드하면 "
             "모든 표와 도면이 실제 값으로 채워집니다. 빈칸은 라운드 중 직접 적어 넣을 수 있게 점선으로 출력했습니다.",
             MARGIN + 8, ty - 12, PAGE_W - 2 * MARGIN - 16, size=8, leading=10.5, color=HexColor("#8A5A16"),
         )
@@ -327,9 +338,10 @@ def strategy_page(c: Canvas, course: Course) -> None:
     x0, w = MARGIN, PAGE_W - 2 * MARGIN
     y = PAGE_H - 34 * mm
 
-    sections = [
+    # 코스별 보정 항목은 데이터(strategy.course_notes)에서 가져오고, 없으면 건너뛴다.
+    blocks: list[tuple[str, list[str]]] = [
         (
-            "1. 더블보기를 만드는 3가지만 지운다",
+            "더블보기를 만드는 3가지만 지운다",
             [
                 "OB · 해저드 — 티샷은 '넓은 쪽'이 아니라 '벌타 없는 쪽'을 본다. 코너 공략 금지.",
                 "그린 못 미친 벙커 — 애매하면 한 클럽 길게 잡고 그린 뒤 에지를 노린다.",
@@ -337,30 +349,31 @@ def strategy_page(c: Canvas, course: Course) -> None:
             ],
         ),
         (
-            "2. 파를 버리는 대신 보기를 확보하는 배분",
+            "파를 버리는 대신 보기를 확보하는 배분",
             [
                 "파4: 티샷 → 100m 안쪽으로 레이업 → 웨지 → 2퍼트. 세컨 그린 직접 공략은 150m 이내일 때만.",
                 "파5: 3온을 목표로 두지 않는다. 세컨을 그린 100m 앞 평지로 보내는 것이 유일한 목표.",
                 "파3: 핀이 아니라 그린 중앙. 짧은 쪽 미스가 항상 긴 쪽 미스보다 낫다.",
             ],
         ),
+    ]
+
+    course_notes = [str(s) for s in (course.strategy.get("course_notes") or [])]
+    if course_notes:
+        blocks.append((str(course.strategy.get("course_notes_title", "이 코스 보정")), course_notes))
+
+    blocks.append(
         (
-            "3. 산악 코스(덕암산 지세) 보정",
-            [
-                "오르막 10m당 약 한 클럽 길게, 내리막은 런까지 계산해 한 클럽 짧게.",
-                "좌우 경사에서는 볼이 경사 아래쪽으로 흐른다. 목표를 경사 위쪽으로 옮겨 조준.",
-                "그린 브레이크는 산 쪽에서 저지대(온천 방향)로 흐르는 것을 기본 가정으로 두고 눈으로 확인.",
-            ],
-        ),
-        (
-            "4. 라운드 중 규칙",
+            "라운드 중 규칙",
             [
                 "한 홀에서 같은 미스를 두 번 하면, 그 홀은 그 클럽을 봉인한다.",
                 "더블보기 이상이 난 다음 홀은 무조건 안전 배분으로 되돌린다.",
                 "티잉그라운드에서 목표를 소리 내어 정하고 스윙한다. 정하지 않은 스윙이 OB를 만든다.",
             ],
-        ),
-    ]
+        )
+    )
+
+    sections = [(f"{i}. {title}", items) for i, (title, items) in enumerate(blocks, 1)]
 
     for title, items in sections:
         c.setFont(fonts.bold(), 10.5)
@@ -376,7 +389,7 @@ def strategy_page(c: Canvas, course: Course) -> None:
     if clubs:
         c.setFont(fonts.bold(), 10.5)
         c.setFillColor(C_ACCENT)
-        c.drawString(x0, y, "내 클럽 거리 (data/bugok_cc.json 의 player.clubs)")
+        c.drawString(x0, y, f"내 클럽 거리 ({_data_ref(course)} 의 player.clubs)")
         y -= 8
         per_row = 6
         cell_w = w / per_row

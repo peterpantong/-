@@ -1,0 +1,92 @@
+{
+  "_주의": [
+    "홀별 par / handicap / tees 는 아직 비어 있습니다(null).",
+    "ananti.kr 이 이 작업 환경의 네트워크 정책에서 차단되어 실제 스코어카드를 가져올 수 없었고,",
+    "확인되지 않은 거리는 지어내지 않았습니다.",
+    "",
+    "확인된 정보만 채워져 있습니다: 18홀 / 파72 / 주소 / 바다 인접 7홀·조망 11홀 구성.",
+    "OUT·IN 코스 명칭은 확인하지 못해 임시로 'OUT'/'IN' 으로 두었습니다 — 실제 명칭 확인 후 고치세요.",
+    "",
+    "스코어카드나 코스안내에서 값을 채운 뒤:  python build.py --data data/ananti_namhae.json"
+  ],
+
+  "course": {
+    "name": "아난티 남해",
+    "name_en": "ANANTI NAMHAE",
+    "subtitle": "홀별 코스공략 야디지북",
+    "slogan": "전인민의 보기플레이를 위하여",
+    "address": "경상남도 남해군 남면 남서대로1179번길 40-109",
+    "tel": "",
+    "web": "https://ananti.kr/ko/namhae/NH0201",
+    "holes": 18,
+    "par": 72,
+    "unit": "m",
+    "nines": [
+      { "key": "out", "name": "OUT", "note": "1~9번홀 — 실제 코스 명칭 확인 필요" },
+      { "key": "in", "name": "IN", "note": "10~18번홀 — 실제 코스 명칭 확인 필요" }
+    ],
+    "notes": [
+      "구 힐튼 남해 골프 & 스파 리조트. 남해 남쪽 해안 절벽 지형에 조성된 코스입니다.",
+      "18홀 중 7홀이 바다에 직접 접해 있고, 나머지 11홀에서도 바다 조망이 열립니다.",
+      "해안 코스인 만큼 바람이 스코어를 가르는 요소입니다 — 홀마다 방향과 세기를 다시 확인하세요."
+    ]
+  },
+
+  "strategy": {
+    "course_notes_title": "해안 코스 · 바람 보정",
+    "course_notes": [
+      "바다에 접한 7홀에서는 바다 쪽이 항상 위험한 쪽이다. 미스는 무조건 육지 쪽으로.",
+      "맞바람은 클럽을 크게 잡고 부드럽게 — 세게 치면 볼이 뜨면서 더 짧아진다.",
+      "뒷바람은 캐리보다 런이 문제. 그린 앞에 떨어뜨려 굴릴 계산으로 한 클럽 짧게.",
+      "옆바람은 바람이 미는 만큼 넓은 쪽으로 조준선을 옮긴다. 바람을 이기려 깎아 치지 않는다.",
+      "티잉그라운드와 그린 위의 바람이 다른 홀이 있다. 그린 근처 깃발을 보고 다시 판단.",
+      "해안 그린은 바다 방향으로 흐르는 경우가 많다 — 라운드 첫 홀에서 확인하고 그 뒤로 적용."
+    ]
+  },
+
+  "tees": [
+    { "key": "black", "label": "블랙", "color": "#1E2A22" },
+    { "key": "blue",  "label": "블루",  "color": "#2E6FA7" },
+    { "key": "white", "label": "화이트", "color": "#8A8F98" },
+    { "key": "red",   "label": "레드",  "color": "#C0392B" }
+  ],
+
+  "player": {
+    "_설명": "본인 평균 캐리 거리(미터)로 고치면 홀별 보기플레이 플랜의 클럽 추천이 함께 바뀝니다.",
+    "target_score": 90,
+    "clubs": [
+      { "name": "드라이버", "dist": 200 },
+      { "name": "3번 우드", "dist": 180 },
+      { "name": "5번 유틸", "dist": 168 },
+      { "name": "5번 아이언", "dist": 155 },
+      { "name": "6번 아이언", "dist": 145 },
+      { "name": "7번 아이언", "dist": 135 },
+      { "name": "8번 아이언", "dist": 125 },
+      { "name": "9번 아이언", "dist": 113 },
+      { "name": "피칭웨지", "dist": 100 },
+      { "name": "52도 웨지", "dist": 85 },
+      { "name": "56도 웨지", "dist": 70 }
+    ]
+  },
+
+  "holes": [
+    { "nine": "out", "hole": 1,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 2,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 3,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 4,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 5,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 6,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 7,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 8,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "out", "hole": 9,  "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 10, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 11, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 12, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 13, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 14, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 15, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 16, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 17, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" },
+    { "nine": "in",  "hole": 18, "par": null, "handicap": null, "shape": "straight", "elevation": "flat", "tees": { "black": null, "blue": null, "white": null, "red": null }, "green": {}, "hazards": [], "keys": [], "bogey_plan": [], "note": "", "image": "" }
+  ]
+}
