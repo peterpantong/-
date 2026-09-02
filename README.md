@@ -81,6 +81,19 @@ images/ananti_hole02.jpg
 `"image"` / `"green_image"` 를 직접 적으면 규칙보다 우선합니다. 파일이 없으면 개략도로 대체됩니다.
 자세한 내용은 [images/README.md](images/README.md) 참고.
 
+### 파일명이 제각각일 때
+
+사이트에서 저장하면 이름이 `hole1.jpg`, `NH_02_view.png`, `3번홀_그린.jpg` 처럼 제각각입니다.
+정리 도구가 홀 번호와 그린 여부를 이름에서 뽑아 규칙대로 복사해 줍니다.
+
+```bash
+python tools/import_images.py --src ~/Downloads/ananti --prefix ananti --dry-run   # 미리보기
+python tools/import_images.py --src ~/Downloads/ananti --prefix ananti             # 실행
+```
+
+홀 번호를 못 찾은 파일은 건너뛰고 목록으로 알려주며, 두 파일이 같은 이름으로 겹치면
+덮어쓰지 않고 멈춥니다.
+
 ## ⚠️ 거리 데이터는 직접 채워야 합니다
 
 두 데이터 파일 모두 **파 / 핸디캡 / 티별 거리가 비어 있습니다(null)**.
@@ -172,6 +185,7 @@ yardagebook/course.py     데이터 로딩·검증, 보기/싱글 플랜 계산
 yardagebook/diagram.py    홀 도면 벡터 드로잉
 yardagebook/book.py       페이지 레이아웃
 yardagebook/fonts.py      한글 폰트 탐색·등록
+tools/import_images.py    내려받은 코스안내도 파일명 정리
 data/bugok_cc.json        부곡CC 코스 데이터 (여기를 채우세요)
 data/ananti_namhae.json   아난티 남해 코스 데이터 (여기를 채우세요)
 data/sample_filled.json   레이아웃 확인용 예시 데이터 (실제 거리 아님)
