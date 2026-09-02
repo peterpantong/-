@@ -27,6 +27,8 @@ JSON 을 홀마다 고칠 필요가 없습니다.
 
 ## 현재 상태
 
-`ananti_hole01.jpg`, `ananti_hole01_green.jpg` 는 **자리 표시용 플레이스홀더**입니다.
-아난티 남해 코스안내(<https://ananti.kr/ko/namhae/NH0201>)에서 1번홀 그림 두 장을 저장해
-같은 이름으로 덮어쓰면 실제 안내도가 들어갑니다.
+아직 비어 있습니다. 이미지가 없는 홀은 코스 데이터로 그린 개략도가 대신 들어가므로
+PDF 는 지금도 정상적으로 만들어집니다.
+
+아난티 남해 코스안내(<https://ananti.kr/ko/namhae/NH0201>)에서 홀 그림을 저장해
+`ananti_hole01.jpg` / `ananti_hole01_green.jpg` 로 넣으면 그 홀부터 실제 안내도로 바뀝니다.
