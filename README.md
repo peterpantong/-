@@ -81,6 +81,33 @@ images/ananti_hole02.jpg
 `"image"` / `"green_image"` 를 직접 적으면 규칙보다 우선합니다. 파일이 없으면 개략도로 대체됩니다.
 자세한 내용은 [images/README.md](images/README.md) 참고.
 
+### URL 패턴으로 한 번에 받기
+
+골프장 사이트는 대개 홀 번호만 바뀌는 규칙적인 이미지 주소를 씁니다.
+아난티 남해는 이렇습니다:
+
+```
+https://cdn.ananti.kr/plf/ui/img/golfclub/golfclub-outcourse-hole4.jpg
+```
+
+홀 번호 자리를 `{hole}` 로 바꿔 넘기면 한 번에 받아 `images/` 에 규칙대로 저장합니다.
+
+```bash
+# OUT 1~9번홀
+python tools/fetch_images.py --prefix ananti --holes 1-9 \
+  --template "https://cdn.ananti.kr/plf/ui/img/golfclub/golfclub-outcourse-hole{hole}.jpg"
+
+# IN 10~18번홀 — URL 이 자체 1~9 번호를 쓰면 offset 으로 맞춥니다
+python tools/fetch_images.py --prefix ananti --holes 10-18 --url-hole-offset -9 \
+  --template "https://cdn.ananti.kr/plf/ui/img/golfclub/golfclub-incourse-hole{hole}.jpg"
+```
+
+- `--dry-run` 으로 주소만 먼저 확인할 수 있습니다
+- 그린 상세도는 `--green` (→ `_green` 접미사)
+- 확장자는 URL 이 아니라 **내용**으로 판별합니다. 404 를 200 HTML 로 돌려주는
+  사이트를 걸러내기 위해서입니다
+- 이미 있는 파일은 건너뜁니다 (`--overwrite` 로 강제)
+
 ### 파일명이 제각각일 때
 
 사이트에서 저장하면 이름이 `hole1.jpg`, `NH_02_view.png`, `3번홀_그린.jpg` 처럼 제각각입니다.
@@ -185,6 +212,7 @@ yardagebook/course.py     데이터 로딩·검증, 보기/싱글 플랜 계산
 yardagebook/diagram.py    홀 도면 벡터 드로잉
 yardagebook/book.py       페이지 레이아웃
 yardagebook/fonts.py      한글 폰트 탐색·등록
+tools/fetch_images.py     URL 패턴으로 코스안내도 일괄 내려받기
 tools/import_images.py    내려받은 코스안내도 파일명 정리
 data/bugok_cc.json        부곡CC 코스 데이터 (여기를 채우세요)
 data/ananti_namhae.json   아난티 남해 코스 데이터 (여기를 채우세요)
