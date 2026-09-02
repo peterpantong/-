@@ -561,6 +561,132 @@ def single_strategy_page(c: Canvas, course: Course) -> None:
     c.showPage()
 
 
+def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = "bogey") -> None:
+    """스코어맵 + 공략 가이드 한 장.
+
+    골프장이 제공하는 실제 코스안내도를 그대로 크게 싣고, 옆에 공략을 붙인다.
+    이미지가 없는 홀은 개략도로 대체한다.
+    """
+    nine = course.nine_name(hole.nine)
+    _page_header(c, f"{hole.hole}번홀", _nine_label(course, hole))
+
+    bar_y = _hole_info_bar(c, course, hole)
+
+    img_path = _image_path(hole, course)
+    green_img = _green_image_path(hole, course)
+
+    col_gap = 7 * mm
+    left_w = (PAGE_W - 2 * MARGIN) * 0.52
+    text_x = MARGIN + left_w + col_gap
+    text_w = PAGE_W - MARGIN - text_x
+    col_h = 176 * mm
+    col_y = bar_y - 7 * mm - col_h
+
+    # 왼쪽: 실제 코스안내도 (없으면 개략도)
+    if img_path:
+        _draw_course_map(c, MARGIN, col_y, left_w, col_h, img_path)
+    else:
+        diagram.draw_hole(c, MARGIN, col_y, left_w, col_h, hole, tee_key,
+                          tees=course.tees, ref_tee=str(course.meta.get("hazard_ref_tee") or tee_key))
+
+    y = bar_y - 9 * mm
+    floor = col_y + 2  # 이 아래로는 쓰지 않는다 (스코어 기록칸 영역)
+
+    # 오른쪽 위: 그린 상세도
+    if green_img:
+        y = _draw_green_map(c, text_x, y, text_w, 46 * mm, green_img) - 8
+
+    # 그린 거리
+    y = _sub(c, "그린", text_x, y)
+    g = hole.green
+    bits = []
+    if g.get("depth"):
+        bits.append(f"깊이 {g['depth']}m")
+    if g.get("width"):
+        bits.append(f"폭 {g['width']}m")
+    if g.get("tier"):
+        bits.append(str(g["tier"]))
+    if bits:
+        y = para(c, " · ".join(bits), text_x, y, text_w, size=8.3, leading=11)
+    if g.get("break"):
+        y = para(c, f"브레이크: {g['break']}", text_x, y, text_w, size=8.3, leading=11)
+    y = _green_fcb_table(c, course, hole, text_x, y - 3, text_w) - 8
+
+    # 해저드
+    if hole.hazards and y > floor + 30:
+        y = _sub(c, "위험구역", text_x, y)
+        for hz in hole.hazards:
+            color = C_RED if hz.type in ("ob", "water") else C_INK
+            y = bullet(c, hz.label(), text_x, y, text_w, size=8.3, leading=10.8, color=color) - 2
+        y -= 6
+
+    # 공략 가이드
+    keys = general_keys(hole)
+    if keys and y > floor + 30:
+        y = _sub(c, "공략 포인트", text_x, y)
+        for k in keys:
+            y = bullet(c, k, text_x, y, text_w, size=8.3, leading=10.8) - 2
+        y -= 6
+
+    for kind in _plan_kinds(level):
+        if kind == "bogey":
+            steps, manual = bogey_plan(hole, course.player, tee_key), bool(hole.bogey_plan)
+            title = f"보기 플랜 (목표 {hole.par + 1}타)" if hole.par else "보기 플랜"
+        else:
+            steps, manual = single_plan(hole, course.player, tee_key), bool(hole.single_plan)
+            title = f"싱글 플랜 (목표 {hole.par}타)" if hole.par else "싱글 플랜"
+        if not steps or y < floor + 40:
+            continue
+        y = _sub(c, title, text_x, y)
+        for i, step in enumerate(steps, 1):
+            y = bullet(c, step, text_x, y, text_w, size=8.3, leading=10.8, marker=f"{i}") - 2
+        if not manual:
+            c.setFont(fonts.regular(), 6.5)
+            c.setFillColor(C_MUTED)
+            c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
+            y -= 10
+        y -= 6
+
+    if hole.note and y > floor + 40:
+        y = _sub(c, "코스 안내", text_x, y)
+        y = para(c, hole.note, text_x, y, text_w, size=7.8, leading=10.4, color=C_MUTED)
+
+    _score_boxes(c, MARGIN, col_y - 10 * mm, PAGE_W - 2 * MARGIN)
+    _footer(c, f"{course.meta.get('name', '')} · {nine} {hole.hole}번홀")
+    c.showPage()
+
+
+def _nine_label(course: Course, hole: Hole) -> str:
+    """'좌청룡 · OUT' 형태. 코스 이름에 이미 OUT/IN 이 있으면 겹쳐 쓰지 않는다."""
+    nine = course.nine_name(hole.nine)
+    side = "OUT" if hole.hole <= 9 else "IN"
+    return nine if side in nine.upper() else f"{nine} · {side}"
+
+
+def _hole_info_bar(c: Canvas, course: Course, hole: Hole) -> float:
+    """PAR / HDCP / 티별 거리 띠. 띠의 아래쪽 y 를 돌려준다."""
+    bar_y = PAGE_H - 40 * mm
+    bar_h = 16 * mm
+    c.setFillColor(C_ACCENT_LT)
+    c.roundRect(MARGIN, bar_y, PAGE_W - 2 * MARGIN, bar_h, 3, stroke=0, fill=1)
+
+    cells = [("PAR", fmt(hole.par)), ("HDCP", fmt(hole.handicap))]
+    cells += [(t["label"], fmt(hole.tees.get(t["key"]), "m")) for t in course.tees]
+    cw = (PAGE_W - 2 * MARGIN) / len(cells)
+    for i, (label, value) in enumerate(cells):
+        cx = MARGIN + i * cw + cw / 2
+        c.setFont(fonts.regular(), 7)
+        c.setFillColor(C_MUTED)
+        c.drawCentredString(cx, bar_y + bar_h - 6 * mm, label)
+        if value is None:
+            blank_line(c, cx - cw * 0.28, bar_y + 4 * mm, cw * 0.56)
+        else:
+            c.setFont(fonts.bold(), 13)
+            c.setFillColor(C_INK)
+            c.drawCentredString(cx, bar_y + 3.6 * mm, value)
+    return bar_y
+
+
 def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = "bogey") -> None:
     nine = course.nine_name(hole.nine)
     half = "OUT" if hole.hole <= 9 else "IN"
@@ -592,7 +718,7 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
     # 좌: 도면 / 우: 텍스트. 실제 코스안내도가 있으면 왼쪽 단을 넓혀 위아래로 쌓는다.
     ref_tee = str(course.meta.get("hazard_ref_tee") or tee_key)
     col_gap = 8 * mm
-    img_path = _image_path(hole)
+    img_path = _image_path(hole, course)
     left_w = (PAGE_W - 2 * MARGIN) * (0.42 if img_path else 0.33)
     text_x = MARGIN + left_w + col_gap
     text_w = PAGE_W - MARGIN - text_x
@@ -616,7 +742,7 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
     y = _sub(c, "그린", text_x, y)
 
     # 그린 상세도가 있으면 오른쪽에 붙이고, 글은 왼쪽 폭만 쓴다.
-    green_img = _resolve(hole.green_image)
+    green_img = _green_image_path(hole, course)
     txt_w = text_w
     if green_img:
         gi_w = min(text_w * 0.42, 42 * mm)
@@ -750,9 +876,31 @@ def _resolve(raw: str) -> str | None:
     return path if os.path.isfile(path) else None
 
 
-def _image_path(hole: Hole) -> str | None:
-    """홀 전체 코스안내도 이미지 경로."""
-    return _resolve(hole.image)
+_IMG_EXTS = (".jpg", ".jpeg", ".png", ".JPG", ".PNG")
+
+
+def _by_convention(course: Course, hole: Hole, suffix: str) -> str | None:
+    """images/<prefix>_hole01.jpg 규칙으로 이미지를 찾는다.
+
+    18홀치를 JSON 에 일일이 적지 않아도 되도록, 파일만 규칙대로 넣어 두면 잡힌다.
+    """
+    prefix = str(course.meta.get("image_prefix", "") or "").strip()
+    if not prefix:
+        return None
+    for ext in _IMG_EXTS:
+        found = _resolve(f"images/{prefix}_hole{hole.hole:02d}{suffix}{ext}")
+        if found:
+            return found
+    return None
+
+
+def _image_path(hole: Hole, course: Course | None = None) -> str | None:
+    """홀 전체 코스안내도 이미지 경로. JSON 지정 > 파일명 규칙."""
+    return _resolve(hole.image) or (_by_convention(course, hole, "") if course else None)
+
+
+def _green_image_path(hole: Hole, course: Course | None = None) -> str | None:
+    return _resolve(hole.green_image) or (_by_convention(course, hole, "_green") if course else None)
 
 
 def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: str) -> float:
@@ -939,7 +1087,8 @@ def _footer(c: Canvas, text: str) -> None:
 
 # --------------------------------------------------------------------------
 
-def build(course: Course, out_path: str, tee_key: str, level: str = "bogey") -> None:
+def build(course: Course, out_path: str, tee_key: str, level: str = "bogey",
+          style: str = "yardage") -> None:
     c = Canvas(out_path, pagesize=A4)
     meta = course.meta
     c.setTitle(f"{meta.get('name', '')} {meta.get('subtitle', '')}")
@@ -950,7 +1099,8 @@ def build(course: Course, out_path: str, tee_key: str, level: str = "bogey") -> 
     scorecard(c, course)
     strategy_page(c, course)
     single_strategy_page(c, course)
+    page = scoremap_page if style == "scoremap" else hole_page
     for hole in course.holes:
-        hole_page(c, course, hole, tee_key, level)
+        page(c, course, hole, tee_key, level)
     log_page(c, course)
     c.save()

@@ -1,9 +1,9 @@
-# 홀별 코스공략 야디지북
+# 홀별 스코어맵 · 공략 가이드
 
 > 전인민의 보기플레이를 위하여
 
-라운드용 **홀별 코스공략 야디지북 PDF** 생성기.
-JSON 한 개에 코스 데이터를 적어 넣으면 A4 23페이지짜리 야디지북이 나옵니다.
+**골프장이 제공하는 실제 코스안내도 + 홀별 공략 가이드**를 한 권짜리 A4 PDF(23페이지)로 묶는 생성기.
+JSON 한 개에 코스 데이터를 적고 `images/` 에 코스안내도를 넣으면 끝납니다.
 코스에 종속된 문구는 전부 데이터에 있고 코드에는 없어서, 골프장을 추가하려면 JSON만 하나 더 만들면 됩니다.
 
 | 코스 | 데이터 파일 | 상태 |
@@ -19,13 +19,25 @@ JSON 한 개에 코스 데이터를 적어 넣으면 A4 23페이지짜리 야디
 | 2 | 스코어카드 — 18홀 파·핸디캡·티별 거리, OUT/IN 합계 |
 | 3 | 보기플레이 기본 전략 + 내 클럽 거리표 + 티오프 전 체크리스트 |
 | 4 | 싱글플레이 전략 + 라운드별 지표 기록표 (GIR·페어웨이·퍼트·업앤다운) |
-| 5~22 | 홀 페이지 18장 — 홀 도면, 그린 정보, 해저드, 공략 포인트, 샷 플랜, 메모, 4라운드 스코어 기록 |
+| 5~22 | 홀 페이지 18장 — 스코어맵(실제 코스안내도) + 그린 상세도 + F/C/B 거리 + 위험구역 + 공략 포인트 + 샷 플랜 + 4라운드 기록 |
 | 23 | 라운드 기록 시트 (2라운드분) + 3줄 회고 |
 
-홀 도면은 데이터에서 벡터로 그립니다 — 페어웨이/도그렉, 벙커·해저드·OB 위치,
-그린 크기, 그린까지 남은 거리 마커(100/150/200/250m), 보기플레이 기준 티샷 랜딩존.
+## 두 가지 홀 페이지 형식
 
-실제 야디지북의 두 가지 표기를 그대로 씁니다:
+`--style` 로 고릅니다.
+
+| | 왼쪽 | 쓰는 경우 |
+|---|---|---|
+| **`scoremap`** (기본) | 골프장 **실제 코스안내도** 이미지 | 골프장이 안내도를 제공할 때 — 대부분 이 쪽 |
+| `yardage` | 데이터로 그린 **벡터 개략도** | 안내도가 없거나, 라운드 중 직접 그려 넣고 싶을 때 |
+
+`scoremap` 이라도 해당 홀 이미지가 없으면 자동으로 개략도로 대체되므로, 이미지를 구한 홀부터
+차례로 채워 나가면 됩니다.
+
+### 벡터 개략도 (yardage 형식)
+
+페어웨이/도그렉, 벙커·해저드·OB 위치, 그린 크기, 그린까지 남은 거리 마커(100/150/200/250m),
+보기플레이 기준 티샷 랜딩존. 여기에 실제 야디지북의 두 가지 표기를 씁니다:
 
 - **해저드별 티 캐리 상자** — 벙커·해저드 옆에 티 색 점과 함께 각 티에서의 캐리 거리를 쌓아 표시.
   해저드는 코스 위 고정 지점이므로 '그린까지 남은 거리'가 티와 무관하다는 성질로 환산합니다.
@@ -40,24 +52,31 @@ JSON 한 개에 코스 데이터를 적어 넣으면 A4 23페이지짜리 야디
 pip install -r requirements.txt
 
 python build.py                                  # data/bugok_cc.json -> out/부곡CC_야디지북.pdf
-python build.py --data data/ananti_namhae.json --out out/아난티남해_야디지북.pdf
+python build.py --data data/ananti_namhae.json --out out/아난티남해_스코어맵.pdf
 python build.py --tee blue                       # 기준 티 변경 (black/blue/white/red)
 python build.py --level single                   # 홀 페이지 플랜: bogey(기본) / single / both
+python build.py --style yardage                  # 홀 페이지 형식: scoremap(기본) / yardage
 python build.py --holes 1 --out out/1번홀_샘플.pdf # 일부 홀만 (1 / 1-3 / 1,5,9)
 python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 ```
 
-## 실제 코스안내도 넣기
+## 실제 코스안내도 넣기 — 파일명만 맞추면 끝
 
-홀에 `"image"` 를 지정하면 골프장이 제공하는 **홀 안내도**가 페이지 왼쪽 위에 들어가고,
-그 아래에 거리 마커·랜딩존이 표시된 전략 개략도가 함께 붙습니다.
-`"green_image"` 는 **그린 상세도**로, 오른쪽 '그린' 항목 옆에 작게 배치됩니다.
+`course.image_prefix` 를 정해 두면 **JSON 을 홀마다 고칠 필요 없이** 파일명 규칙으로 잡힙니다.
 
 ```jsonc
-{ "hole": 1, "image": "images/hole01.jpg", "green_image": "images/hole01_green.jpg", ... }
+"course": { "image_prefix": "ananti", ... }
 ```
 
-이미지를 `images/` 에 저장하고 경로만 맞추면 됩니다. 파일이 없으면 개략도만 그립니다.
+```
+images/ananti_hole01.jpg         홀 안내도       -> 페이지 왼쪽 전체
+images/ananti_hole01_green.jpg   그린 상세도     -> 오른쪽 '그린' 항목 위
+images/ananti_hole02.jpg
+...
+```
+
+확장자는 `.jpg` `.jpeg` `.png` 를 찾습니다. 특정 홀만 다른 경로를 쓰려면 그 홀에
+`"image"` / `"green_image"` 를 직접 적으면 규칙보다 우선합니다. 파일이 없으면 개략도로 대체됩니다.
 자세한 내용은 [images/README.md](images/README.md) 참고.
 
 ## ⚠️ 거리 데이터는 직접 채워야 합니다
@@ -66,7 +85,7 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
 골프장 공식 홈페이지(`bkcc.co.kr`, `ananti.kr`)가 이 작업 환경의 네트워크 정책에서
 차단되어 실제 스코어카드를 가져올 수 없었고, 확인되지 않은 거리를 지어내지 않았습니다.
 
-지금 상태로 빌드해도 **라운드 중 직접 적어 넣는 백지 야디지북**으로 바로 쓸 수 있고,
+지금 상태로 빌드해도 **라운드 중 직접 적어 넣는 백지 가이드**로 바로 쓸 수 있고,
 아래 값을 채우면 모든 표·도면·플랜이 실제 값으로 채워집니다.
 
 채워 넣을 곳 (홀당):
@@ -90,8 +109,8 @@ python build.py --data data/sample_filled.json --out out/예시_미리보기.pdf
   "bogey_plan": [],           // 비워 두면 거리에서 자동 계산
   "single_plan": [],          // 싱글 목표 배분. 비워 두면 자동 계산
   "note": "",
-  "image": "images/hole01.jpg",      // 홀 안내도(선택)
-  "green_image": "images/hole01_green.jpg" // 그린 상세도(선택)
+  "image": "",                // 비워 두면 image_prefix 파일명 규칙으로 찾음
+  "green_image": ""
 }
 ```
 
