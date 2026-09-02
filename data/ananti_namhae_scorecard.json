@@ -1,0 +1,353 @@
+{
+  "course": {
+    "name": "아난티 남해",
+    "holes": 18,
+    "par": 73,
+    "unit": "m",
+    "source": "업로드된 아난티 남해 야디지북 PDF 3페이지 스코어카드 + 홀별 페이지 교차검증"
+  },
+  "holes": [
+    {
+      "hole": 1,
+      "nine": "out",
+      "par": 4,
+      "handicap": 15,
+      "title": "10m 내리막 · 오프닝",
+      "tees": {
+        "black": 323,
+        "blue": 301,
+        "white": 281,
+        "red": 261
+      },
+      "tees_yd": {
+        "black": 353,
+        "blue": 329,
+        "white": 308,
+        "red": 286
+      }
+    },
+    {
+      "hole": 2,
+      "nine": "out",
+      "par": 5,
+      "handicap": 7,
+      "title": "좌 도그렉 · 투온 가능",
+      "tees": {
+        "black": 521,
+        "blue": 503,
+        "white": 481,
+        "red": 451
+      },
+      "tees_yd": {
+        "black": 570,
+        "blue": 550,
+        "white": 526,
+        "red": 493
+      }
+    },
+    {
+      "hole": 3,
+      "nine": "out",
+      "par": 4,
+      "handicap": 12,
+      "title": "우측 전면 워터",
+      "tees": {
+        "black": 357,
+        "blue": 334,
+        "white": 304,
+        "red": 261
+      },
+      "tees_yd": {
+        "black": 391,
+        "blue": 365,
+        "white": 333,
+        "red": 285
+      }
+    },
+    {
+      "hole": 4,
+      "nine": "out",
+      "par": 3,
+      "handicap": 8,
+      "title": "시그니처 · 바다 캐리 파3",
+      "tees": {
+        "black": 144,
+        "blue": 133,
+        "white": 114,
+        "red": 102
+      },
+      "tees_yd": {
+        "black": 157,
+        "blue": 145,
+        "white": 124,
+        "red": 111
+      }
+    },
+    {
+      "hole": 5,
+      "nine": "out",
+      "par": 5,
+      "handicap": 17,
+      "title": "계단식 티 · 우측 워터",
+      "tees": {
+        "black": 522,
+        "blue": 487,
+        "white": 458,
+        "red": 424
+      },
+      "tees_yd": {
+        "black": 571,
+        "blue": 533,
+        "white": 502,
+        "red": 464
+      }
+    },
+    {
+      "hole": 6,
+      "nine": "out",
+      "par": 4,
+      "handicap": 3,
+      "title": "폭포 · 우측 대형 워터",
+      "tees": {
+        "black": 378,
+        "blue": 357,
+        "white": 339,
+        "red": 319
+      },
+      "tees_yd": {
+        "black": 413,
+        "blue": 391,
+        "white": 370,
+        "red": 349
+      }
+    },
+    {
+      "hole": 7,
+      "nine": "out",
+      "par": 3,
+      "handicap": 13,
+      "title": "140m 바다 캐리 파3",
+      "tees": {
+        "black": 163,
+        "blue": 145,
+        "white": 128,
+        "red": 108
+      },
+      "tees_yd": {
+        "black": 178,
+        "blue": 159,
+        "white": 141,
+        "red": 119
+      }
+    },
+    {
+      "hole": 8,
+      "nine": "out",
+      "par": 4,
+      "handicap": 18,
+      "title": "티 앞 페널티구역 · 대형 벙커",
+      "tees": {
+        "black": 354,
+        "blue": 328,
+        "white": 308,
+        "red": 283
+      },
+      "tees_yd": {
+        "black": 387,
+        "blue": 359,
+        "white": 337,
+        "red": 310
+      }
+    },
+    {
+      "hole": 9,
+      "nine": "out",
+      "par": 5,
+      "handicap": 10,
+      "title": "오르막 파5 · 전반 마무리",
+      "tees": {
+        "black": 507,
+        "blue": 492,
+        "white": 473,
+        "red": 437
+      },
+      "tees_yd": {
+        "black": 555,
+        "blue": 538,
+        "white": 518,
+        "red": 478
+      }
+    },
+    {
+      "hole": 10,
+      "nine": "in",
+      "par": 5,
+      "handicap": 16,
+      "title": "파노라마 · 티샷 바다 캐리",
+      "tees": {
+        "black": 511,
+        "blue": 480,
+        "white": 476,
+        "red": 406
+      },
+      "tees_yd": {
+        "black": 559,
+        "blue": 525,
+        "white": 519,
+        "red": 443
+      }
+    },
+    {
+      "hole": 11,
+      "nine": "in",
+      "par": 4,
+      "handicap": 9,
+      "title": "좁은 페어웨이 · 우측 갈대와 물",
+      "tees": {
+        "black": 361,
+        "blue": 342,
+        "white": 314,
+        "red": 294
+      },
+      "tees_yd": {
+        "black": 395,
+        "blue": 374,
+        "white": 344,
+        "red": 321
+      }
+    },
+    {
+      "hole": 12,
+      "nine": "in",
+      "par": 4,
+      "handicap": 6,
+      "title": "좌 도그렉 · 우측 크릭 경사",
+      "tees": {
+        "black": 380,
+        "blue": 375,
+        "white": 337,
+        "red": 312
+      },
+      "tees_yd": {
+        "black": 416,
+        "blue": 411,
+        "white": 368,
+        "red": 342
+      }
+    },
+    {
+      "hole": 13,
+      "nine": "in",
+      "par": 3,
+      "handicap": 11,
+      "title": "연못 캐리 · 바람의 홀",
+      "tees": {
+        "black": 148,
+        "blue": 125,
+        "white": 115,
+        "red": 101
+      },
+      "tees_yd": {
+        "black": 162,
+        "blue": 136,
+        "white": 125,
+        "red": 111
+      }
+    },
+    {
+      "hole": 14,
+      "nine": "in",
+      "par": 4,
+      "handicap": 1,
+      "title": "코스 최난 · 494yd 파4",
+      "tees": {
+        "black": 452,
+        "blue": 430,
+        "white": 413,
+        "red": 394
+      },
+      "tees_yd": {
+        "black": 494,
+        "blue": 470,
+        "white": 452,
+        "red": 431
+      }
+    },
+    {
+      "hole": 15,
+      "nine": "in",
+      "par": 4,
+      "handicap": 4,
+      "title": "화이트 비치 벙커 · 인코스 시그니처",
+      "tees": {
+        "black": 409,
+        "blue": 391,
+        "white": 374,
+        "red": 355
+      },
+      "tees_yd": {
+        "black": 447,
+        "blue": 428,
+        "white": 409,
+        "red": 388
+      }
+    },
+    {
+      "hole": 16,
+      "nine": "in",
+      "par": 3,
+      "handicap": 5,
+      "title": "185yd 롱 파3 · 물 건너",
+      "tees": {
+        "black": 170,
+        "blue": 150,
+        "white": 135,
+        "red": 108
+      },
+      "tees_yd": {
+        "black": 185,
+        "blue": 164,
+        "white": 147,
+        "red": 116
+      }
+    },
+    {
+      "hole": 17,
+      "nine": "in",
+      "par": 5,
+      "handicap": 14,
+      "title": "포대 그린 · 좌측 연못",
+      "tees": {
+        "black": 496,
+        "blue": 473,
+        "white": 456,
+        "red": 426
+      },
+      "tees_yd": {
+        "black": 542,
+        "blue": 518,
+        "white": 498,
+        "red": 466
+      }
+    },
+    {
+      "hole": 18,
+      "nine": "in",
+      "par": 4,
+      "handicap": 2,
+      "title": "짧은 파4 · IP 위치가 전부",
+      "tees": {
+        "black": 325,
+        "blue": 303,
+        "white": 274,
+        "red": 271
+      },
+      "tees_yd": {
+        "black": 355,
+        "blue": 331,
+        "white": 300,
+        "red": 296
+      }
+    }
+  ]
+}
