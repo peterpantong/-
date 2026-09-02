@@ -233,7 +233,7 @@ def cover(c: Canvas, course: Course) -> None:
         "라운드 전날: 전략 페이지 두 장(보기플레이 / 싱글플레이)을 읽고, 드라이버를 뺄 홀 3개를 정한다.",
         "홀 도면: 흰 점선 원은 티샷 목표 지점, 흰 숫자는 그린까지 남은 거리(m).",
         "라운드 중: 판단은 티잉그라운드에서 끝내고, 그 다음부터는 홀 페이지의 플랜대로만 친다.",
-        "라운드 후: 마지막 기록 페이지에 스코어·퍼트·벌타를 적고 3줄 회고를 남긴다.",
+        "라운드 후: 홀마다 아래 기록칸에 스코어·퍼트·FW·벌타를 적고, 싱글 전략 페이지의 지표표를 채운다.",
     ):
         uy = bullet(c, item, MARGIN, uy, PAGE_W - 2 * MARGIN, size=8.3, leading=11) - 3
 
@@ -584,17 +584,30 @@ def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: st
 
     # 왼쪽: 실제 코스안내도 (없으면 개략도)
     if img_path:
-        _draw_course_map(c, MARGIN, col_y, left_w, col_h, img_path)
+        used = _draw_course_map(c, MARGIN, col_y, left_w, col_h, img_path)
+        # 그림 아래 남는 자리에 골프장 공식 설명을 붙인다
+        if hole.note:
+            ny = col_y + col_h - used - 6 * mm
+            ny = _sub(c, "골프장 코스 안내", MARGIN, ny)
+            para(c, hole.note, MARGIN, ny, left_w, size=7.8, leading=10.4, color=C_MUTED)
     else:
         diagram.draw_hole(c, MARGIN, col_y, left_w, col_h, hole, tee_key,
                           tees=course.tees, ref_tee=str(course.meta.get("hazard_ref_tee") or tee_key))
 
     y = bar_y - 9 * mm
-    floor = col_y + 2  # 이 아래로는 쓰지 않는다 (스코어 기록칸 영역)
+    # 스코어 기록칸은 페이지 맨 아래 고정. 오른쪽 단 글은 도면 아래로도 흘러도 되므로
+    # 한계는 도면 바닥이 아니라 기록칸 윗변이다.
+    box_top = 42 * mm
+    floor = box_top + 4 * mm
+
+    # 항목이 많을수록 조금씩 조여서 한 페이지에 담는다
+    dense = level == "both"
+    fs = 7.9 if dense else 8.3          # 본문 크기
+    ld = 10.2 if dense else 10.8        # 줄 간격
 
     # 오른쪽 위: 그린 상세도
     if green_img:
-        y = _draw_green_map(c, text_x, y, text_w, 46 * mm, green_img) - 8
+        y = _draw_green_map(c, text_x, y, text_w, (36 if dense else 46) * mm, green_img) - 8
 
     # 그린 거리
     y = _sub(c, "그린", text_x, y)
@@ -607,27 +620,28 @@ def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: st
     if g.get("tier"):
         bits.append(str(g["tier"]))
     if bits:
-        y = para(c, " · ".join(bits), text_x, y, text_w, size=8.3, leading=11)
+        y = para(c, " · ".join(bits), text_x, y, text_w, size=fs, leading=ld)
     if g.get("break"):
-        y = para(c, f"브레이크: {g['break']}", text_x, y, text_w, size=8.3, leading=11)
-    y = _green_fcb_table(c, course, hole, text_x, y - 3, text_w) - 8
+        y = para(c, f"브레이크: {g['break']}", text_x, y, text_w, size=fs, leading=ld)
+    y = _green_fcb_table(c, course, hole, text_x, y - 3, text_w) - (6 if dense else 8)
 
     # 해저드
     if hole.hazards and y > floor + 30:
         y = _sub(c, "위험구역", text_x, y)
         for hz in hole.hazards:
             color = C_RED if hz.type in ("ob", "water") else C_INK
-            y = bullet(c, hz.label(), text_x, y, text_w, size=8.3, leading=10.8, color=color) - 2
-        y -= 6
+            y = bullet(c, hz.label(), text_x, y, text_w, size=fs, leading=ld, color=color) - 2
+        y -= 5
 
     # 공략 가이드
     keys = general_keys(hole)
     if keys and y > floor + 30:
         y = _sub(c, "공략 포인트", text_x, y)
         for k in keys:
-            y = bullet(c, k, text_x, y, text_w, size=8.3, leading=10.8) - 2
-        y -= 6
+            y = bullet(c, k, text_x, y, text_w, size=fs, leading=ld) - 2
+        y -= 5
 
+    auto_any = False
     for kind in _plan_kinds(level):
         if kind == "bogey":
             steps, manual = bogey_plan(hole, course.player, tee_key), bool(hole.bogey_plan)
@@ -635,23 +649,26 @@ def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: st
         else:
             steps, manual = single_plan(hole, course.player, tee_key), bool(hole.single_plan)
             title = f"싱글 플랜 (목표 {hole.par}타)" if hole.par else "싱글 플랜"
-        if not steps or y < floor + 40:
+        if not steps or y < floor + 34:
             continue
         y = _sub(c, title, text_x, y)
         for i, step in enumerate(steps, 1):
-            y = bullet(c, step, text_x, y, text_w, size=8.3, leading=10.8, marker=f"{i}") - 2
-        if not manual:
-            c.setFont(fonts.regular(), 6.5)
-            c.setFillColor(C_MUTED)
-            c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
-            y -= 10
-        y -= 6
+            y = bullet(c, step, text_x, y, text_w, size=fs, leading=ld, marker=f"{i}") - 2
+        auto_any = auto_any or not manual
+        y -= 5
 
-    if hole.note and y > floor + 40:
-        y = _sub(c, "코스 안내", text_x, y)
+    # 자동 계산 안내는 플랜이 몇 개든 한 번만
+    if auto_any and y > floor + 12:
+        c.setFont(fonts.regular(), 6.5)
+        c.setFillColor(C_MUTED)
+        c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
+        y -= 11
+
+    if hole.note and not img_path and y > floor + 40:
+        y = _sub(c, "골프장 코스 안내", text_x, y)
         y = para(c, hole.note, text_x, y, text_w, size=7.8, leading=10.4, color=C_MUTED)
 
-    _score_boxes(c, MARGIN, col_y - 10 * mm, PAGE_W - 2 * MARGIN)
+    _score_boxes(c, MARGIN, box_top, PAGE_W - 2 * MARGIN)
     _footer(c, f"{course.meta.get('name', '')} · {nine} {hole.hole}번홀")
     c.showPage()
 
@@ -833,36 +850,6 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
     c.showPage()
 
 
-def log_page(c: Canvas, course: Course) -> None:
-    _page_header(c, "라운드 기록", "홀별 스코어 · 퍼트 · 페어웨이 안착")
-    x0 = MARGIN
-    w = PAGE_W - 2 * MARGIN
-    y = PAGE_H - 32 * mm
-
-    for label in ("1라운드", "2라운드"):
-        c.setFont(fonts.bold(), 10)
-        c.setFillColor(C_ACCENT)
-        c.drawString(x0, y, label)
-        blank_line(c, x0 + 20 * mm, y, 50 * mm)  # 날짜 기입란
-        c.setFont(fonts.regular(), 7)
-        c.setFillColor(C_MUTED)
-        c.drawString(x0 + 20 * mm, y + 4, "날짜 / 동반자")
-        y = _round_grid(c, course, x0, y - 6, w) - 14 * mm
-    c.setFont(fonts.bold(), 10)
-    c.setFillColor(C_ACCENT)
-    c.drawString(x0, y, "라운드 후 3줄 회고")
-    y -= 16
-    for label in ("잘된 것", "무너진 지점", "다음 라운드에서 바꿀 것 한 가지"):
-        c.setFont(fonts.regular(), 8.5)
-        c.setFillColor(C_MUTED)
-        c.drawString(x0, y, label)
-        blank_line(c, x0 + 45 * mm, y, w - 45 * mm)
-        y -= 16
-
-    _footer(c, course.meta.get("name", ""))
-    c.showPage()
-
-
 # --------------------------------------------------------------------------
 # 공통 파츠
 # --------------------------------------------------------------------------
@@ -1000,39 +987,6 @@ def _draw_green_map(c: Canvas, x: float, y: float, w: float, max_h: float, path:
     return dy - 10
 
 
-def _round_grid(c: Canvas, course: Course, x0: float, y: float, w: float) -> float:
-    """18홀 기록 그리드를 그리고 아래쪽 y를 돌려준다."""
-    rows = ["홀", "파", "스코어", "퍼트", "FW", "벌타"]
-    label_w = 20 * mm
-    cell_w = (w - label_w) / 18
-    row_h = 8 * mm
-
-    for r, label in enumerate(rows):
-        ry = y - r * row_h
-        c.setFillColor(C_ACCENT_LT if r == 0 else HexColor("#FFFFFF"))
-        c.rect(x0, ry - row_h, w, row_h, stroke=0, fill=1)
-        c.setStrokeColor(C_LINE)
-        c.setLineWidth(0.5)
-        c.rect(x0, ry - row_h, label_w, row_h, stroke=1, fill=0)
-        c.setFont(fonts.bold(), 8)
-        c.setFillColor(C_INK)
-        c.drawCentredString(x0 + label_w / 2, ry - row_h + 2.6 * mm, label)
-        for i in range(18):
-            cx = x0 + label_w + i * cell_w
-            c.rect(cx, ry - row_h, cell_w, row_h, stroke=1, fill=0)
-            if r == 0:
-                c.setFont(fonts.bold(), 8)
-                c.setFillColor(C_INK)
-                c.drawCentredString(cx + cell_w / 2, ry - row_h + 2.6 * mm, str(i + 1))
-            elif r == 1:
-                p = course.holes[i].par if i < len(course.holes) else None
-                c.setFont(fonts.regular(), 8)
-                c.setFillColor(C_MUTED if p else C_BLANK)
-                c.drawCentredString(cx + cell_w / 2, ry - row_h + 2.6 * mm, str(p) if p else "·")
-
-    return y - len(rows) * row_h
-
-
 def _page_header(c: Canvas, title: str, subtitle: str) -> None:
     c.setFillColor(C_ACCENT)
     c.rect(0, PAGE_H - 20 * mm, PAGE_W, 20 * mm, stroke=0, fill=1)
@@ -1102,5 +1056,4 @@ def build(course: Course, out_path: str, tee_key: str, level: str = "bogey",
     page = scoremap_page if style == "scoremap" else hole_page
     for hole in course.holes:
         page(c, course, hole, tee_key, level)
-    log_page(c, course)
     c.save()
