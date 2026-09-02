@@ -590,6 +590,7 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
             c.drawCentredString(cx, bar_y + 3.6 * mm, value)
 
     # 좌: 도면 / 우: 텍스트. 실제 코스안내도가 있으면 왼쪽 단을 넓혀 위아래로 쌓는다.
+    ref_tee = str(course.meta.get("hazard_ref_tee") or tee_key)
     col_gap = 8 * mm
     img_path = _image_path(hole)
     left_w = (PAGE_W - 2 * MARGIN) * (0.42 if img_path else 0.33)
@@ -602,9 +603,11 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
         img_h = col_h * 0.52
         used = _draw_course_map(c, MARGIN, diag_y + col_h - img_h, left_w, img_h, img_path)
         sch_h = col_h - used - 8 * mm
-        diagram.draw_hole(c, MARGIN, diag_y, left_w, sch_h, hole, tee_key)
+        diagram.draw_hole(c, MARGIN, diag_y, left_w, sch_h, hole, tee_key,
+                          tees=course.tees, ref_tee=ref_tee)
     else:
-        diagram.draw_hole(c, MARGIN, diag_y, left_w, col_h, hole, tee_key)
+        diagram.draw_hole(c, MARGIN, diag_y, left_w, col_h, hole, tee_key,
+                          tees=course.tees, ref_tee=ref_tee)
 
     y = bar_y - 10 * mm
 
@@ -637,7 +640,9 @@ def hole_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: str = 
             y -= 12
     if green_img:
         y = min(y, gi_h) - 4
-    y -= 6
+    y -= 4
+    y = _green_fcb_table(c, course, hole, text_x, y, txt_w)
+    y -= 8
 
     # 해저드
     y = _sub(c, "해저드 · 위험구역", text_x, y)
@@ -777,6 +782,53 @@ def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: st
     c.setFillColor(C_MUTED)
     c.drawString(x + 1, dy - 7, "실제 코스안내도 (골프장 제공)")
     return dh + cap_h
+
+
+def _green_fcb_table(c: Canvas, course: Course, hole: Hole, x: float, y: float, w: float) -> float:
+    """그린 앞 / 중앙 / 뒤 거리표 — 실제 야디지북의 F·C·B 표.
+
+    티 거리는 관례상 그린 중앙까지이므로, 그린 깊이의 절반을 앞뒤로 더한다.
+    """
+    depth = hole.green.get("depth")
+    if not depth or not hole.known:
+        return y
+
+    half = float(depth) / 2
+    rows = [("앞", -half), ("중앙", 0.0), ("뒤", +half)]
+    tees = course.tees
+
+    label_w = 13 * mm
+    cell_w = (w - label_w) / max(1, len(tees))
+    row_h = 5.6 * mm
+
+    # 헤더
+    cx = x + label_w
+    c.setFont(fonts.regular(), 6.5)
+    for tee in tees:
+        c.setFillColor(HexColor(str(tee.get("color", "#000000"))))
+        c.circle(cx + 4, y + 2.2, 1.9, stroke=0, fill=1)
+        c.setFillColor(C_MUTED)
+        c.drawString(cx + 8, y, str(tee.get("label", tee["key"])))
+        cx += cell_w
+    y -= 4
+
+    for name, delta in rows:
+        c.setStrokeColor(C_LINE)
+        c.setLineWidth(0.5)
+        c.rect(x, y - row_h, w, row_h, stroke=1, fill=0)
+        c.setFont(fonts.bold(), 7.5)
+        c.setFillColor(C_ACCENT)
+        c.drawString(x + 3, y - row_h + 1.9 * mm, name)
+        cx = x + label_w
+        for tee in tees:
+            base = hole.tees.get(tee["key"])
+            c.setFont(fonts.bold(), 8.5)
+            c.setFillColor(C_INK if base is not None else C_BLANK)
+            text = f"{base + delta:.0f}" if base is not None else "·"
+            c.drawCentredString(cx + cell_w / 2, y - row_h + 1.9 * mm, text)
+            cx += cell_w
+        y -= row_h
+    return y
 
 
 def _draw_green_map(c: Canvas, x: float, y: float, w: float, max_h: float, path: str) -> float:

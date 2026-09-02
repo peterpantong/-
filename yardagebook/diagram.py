@@ -108,6 +108,20 @@ def path_length(pts: Sequence[tuple[float, float]]) -> float:
 # 드로잉
 # --------------------------------------------------------------------------
 
+def tee_distance_to(hole: Hole, hazard_at: float, ref_tee: str, tee_key: str) -> float | None:
+    """기준 티에서 hazard_at(m) 인 지점까지의, tee_key 기준 거리.
+
+    해저드는 코스 위의 고정된 지점이므로 '그린까지 남은 거리'는 티가 달라져도
+    같다. 그 성질을 이용해 각 티에서의 캐리 거리를 환산한다.
+    """
+    ref_len = hole.tees.get(ref_tee)
+    tee_len = hole.tees.get(tee_key)
+    if ref_len is None or tee_len is None:
+        return None
+    to_green = float(ref_len) - hazard_at
+    return float(tee_len) - to_green
+
+
 def draw_hole(
     c: Canvas,
     x: float,
@@ -117,8 +131,13 @@ def draw_hole(
     hole: Hole,
     tee_key: str,
     show_scale_note: bool = True,
+    tees: list[dict] | None = None,
+    ref_tee: str = "white",
 ) -> None:
-    """(x, y)를 좌하단으로 하는 w x h 영역에 홀 도면을 그린다."""
+    """(x, y)를 좌하단으로 하는 w x h 영역에 홀 도면을 그린다.
+
+    tees 를 넘기면 실제 야디지북처럼 해저드마다 '티별 캐리 거리' 상자를 얹는다.
+    """
     length = hole.length(tee_key)
     pts = centerline(hole, length)
 
@@ -178,6 +197,12 @@ def draw_hole(
     # 해저드
     for hz in hole.hazards:
         _draw_hazard(c, hz, pts, length, P, scale, horiz)
+
+    # 실제 야디지북처럼 해저드마다 티별 캐리 거리 상자를 얹는다
+    if tees and has_data:
+        for hz in hole.hazards:
+            _draw_carry_box(c, hz, hole, pts, length, P, scale, horiz, tees, ref_tee,
+                            bounds=(x, y, w, h))
 
     # 그린
     _draw_green(c, hole, pts, P, scale, horiz)
@@ -340,6 +365,71 @@ def _draw_hazard(c, hz, pts, length, P, scale, horiz) -> None:
         c.setStrokeColor(C_SAND_EDGE)
     c.setLineWidth(0.5)
     c.ellipse(cxp - ex, cyp - ey, cxp + ex, cyp + ey, stroke=1, fill=1)
+
+
+def _draw_carry_box(c, hz, hole, pts, length, P, scale, horiz, tees, ref_tee, bounds) -> None:
+    """해저드 옆에 티별 캐리 거리를 쌓아 표시한다 (실제 야디지북 방식).
+
+    OB 처럼 구간 전체에 걸친 것과, 티에서의 거리를 모르는 해저드는 건너뛴다.
+    """
+    if hz.type == "ob" or hz.start is None:
+        return
+
+    # 해저드 앞 끝까지의 캐리를 기준으로 한다 (넘겨야 하는 거리)
+    rows: list[tuple[str, float]] = []
+    for tee in tees:
+        d = tee_distance_to(hole, float(hz.start), ref_tee, tee["key"])
+        if d is None or d < 20 or d > length + 30:
+            continue
+        rows.append((str(tee.get("color", "#000000")), d))
+    if not rows:
+        return
+
+    # 해저드 위치와 바깥 방향
+    side_sign = {"left": -1.0, "right": 1.0, "center": 0.0}.get(hz.side, 0.0)
+    if hz.side.startswith("greenside"):
+        side_sign = -1.0 if hz.side.endswith("left") else 1.0
+    if side_sign == 0.0:
+        side_sign = 1.0
+
+    mid = (float(hz.start) + float(hz.end)) / 2 if hz.end is not None else float(hz.start)
+    mx, my, ang = point_at(pts, max(0.0, min(mid, length)))
+    nx, ny = math.sin(ang), -math.cos(ang)
+    lateral = (FAIRWAY_W / 2 + 20) * side_sign
+    ax, ay = P(mx + nx * lateral, my + ny * lateral)
+
+    row_h = 6.0
+    box_w = 20.0
+    box_h = row_h * len(rows) + 3
+    bx = ax - box_w / 2
+    by = ay - box_h / 2
+
+    # 도면 밖으로 나가지 않게 가둔다
+    x0, y0, w0, h0 = bounds
+    bx = max(x0 + 1.5, min(bx, x0 + w0 - box_w - 1.5))
+    by = max(y0 + 1.5, min(by, y0 + h0 - box_h - 1.5))
+
+    # 어느 해저드의 숫자인지 보이도록 지시선을 먼저 긋는다
+    hzx, hzy = P(mx + nx * (FAIRWAY_W / 2 + 7) * side_sign,
+                 my + ny * (FAIRWAY_W / 2 + 7) * side_sign)
+    c.setStrokeColor(HexColor("#FFFFFFAA"))
+    c.setLineWidth(0.5)
+    c.line(hzx, hzy, bx + box_w / 2, by + box_h / 2)
+
+    c.setFillColor(HexColor("#FFFFFFE6"))
+    c.setStrokeColor(HexColor("#5A6B58"))
+    c.setLineWidth(0.4)
+    c.roundRect(bx, by, box_w, box_h, 1.5, stroke=1, fill=1)
+
+    for i, (color, dist) in enumerate(rows):
+        ry = by + box_h - 3 - (i + 1) * row_h + 1.6
+        c.setFillColor(HexColor(color))
+        c.setStrokeColor(HexColor("#5A6B58"))
+        c.setLineWidth(0.3)
+        c.circle(bx + 4, ry + 1.6, 1.7, stroke=1, fill=1)
+        c.setFillColor(C_INK)
+        c.setFont(fonts.bold(), 5.2)
+        c.drawRightString(bx + box_w - 2.5, ry, f"{dist:.0f}")
 
 
 def _draw_green(c, hole, pts, P, scale, horiz) -> None:
