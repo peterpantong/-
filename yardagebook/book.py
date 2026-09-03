@@ -148,11 +148,42 @@ def _data_ref(course: Course) -> str:
 # 페이지
 # --------------------------------------------------------------------------
 
+def _draw_cover_fit(c: Canvas, x: float, y: float, w: float, h: float, path: str) -> None:
+    """이미지를 (x,y,w,h) 영역에 비율 유지한 채 꽉 채운다 — 넘치는 쪽은 잘라낸다."""
+    reader = ImageReader(path)
+    iw, ih = reader.getSize()
+    if iw / ih > w / h:
+        dh = h
+        dw = iw * (h / ih)
+        dx, dy = x - (dw - w) / 2, y
+    else:
+        dw = w
+        dh = ih * (w / iw)
+        dx, dy = x, y - (dh - h) / 2
+
+    c.saveState()
+    clip = c.beginPath()
+    clip.rect(x, y, w, h)
+    c.clipPath(clip, stroke=0, fill=0)
+    c.drawImage(reader, dx, dy, dw, dh, preserveAspectRatio=True, mask="auto")
+    c.restoreState()
+
+
 def cover(c: Canvas, course: Course) -> None:
     meta = course.meta
     band_bottom = PAGE_H * 0.58
-    c.setFillColor(C_ACCENT)
-    c.rect(0, band_bottom, PAGE_W, PAGE_H - band_bottom, stroke=0, fill=1)
+    cover_img = _resolve(str(meta.get("cover_image", "") or ""))
+    if cover_img:
+        _draw_cover_fit(c, 0, band_bottom, PAGE_W, PAGE_H - band_bottom, cover_img)
+        # 흰 글씨가 사진 위에서도 읽히도록 어둡게 톤을 낮춘다.
+        c.saveState()
+        c.setFillColor(HexColor("#132018"))
+        c.setFillAlpha(0.45)
+        c.rect(0, band_bottom, PAGE_W, PAGE_H - band_bottom, stroke=0, fill=1)
+        c.restoreState()
+    else:
+        c.setFillColor(C_ACCENT)
+        c.rect(0, band_bottom, PAGE_W, PAGE_H - band_bottom, stroke=0, fill=1)
 
     c.setFillColor(HexColor("#FFFFFF"))
     c.setFont(fonts.regular(), 10)
@@ -576,38 +607,75 @@ def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: st
     green_img = _green_image_path(hole, course)
 
     col_gap = 7 * mm
-    left_w = (PAGE_W - 2 * MARGIN) * 0.52
+    # 실제 코스안내도가 가로로 넓은 사진(약 1170x990)이라 폭이 커야 인쇄된 숫자가 커진다 —
+    # 왼쪽 단 비중을 넓혀 원본 숫자의 가독성을 올린다.
+    left_w = (PAGE_W - 2 * MARGIN) * 0.58
     text_x = MARGIN + left_w + col_gap
     text_w = PAGE_W - MARGIN - text_x
-    col_h = 176 * mm
-    col_y = bar_y - 7 * mm - col_h
 
-    # 왼쪽: 실제 코스안내도 (없으면 개략도)
-    if img_path:
-        used = _draw_course_map(c, MARGIN, col_y, left_w, col_h, img_path)
-        # 그림 아래 남는 자리에 골프장 공식 설명을 붙인다
-        if hole.note:
-            ny = col_y + col_h - used - 6 * mm
-            ny = _sub(c, "골프장 코스 안내", MARGIN, ny)
-            para(c, hole.note, MARGIN, ny, left_w, size=7.8, leading=10.4, color=C_MUTED)
+    # 기록칸이 빠진 만큼 왼쪽 단을 페이지 하단까지 그대로 쓴다.
+    # (개략도 캡션이 한 줄 들어갈 여유만 푸터 위에 남긴다)
+    col_bottom = MARGIN + 8 * mm
+    col_h = bar_y - 7 * mm - col_bottom
+
+    # 왼쪽 단: 위쪽은 홀 전체 도면, 아래쪽은 그린 확대도 — 원본이 한 장에 붙어 있으면
+    # 숫자가 작아 읽기 어려우므로 둘로 나눠 각각 크게 싣는다(둘 다 없으면 개략도로 대체).
+    # 두 칸의 가로폭은 항상 맞춘다. 사진은 비율이 고정이라 폭을 다 채우면 세로가
+    # 넘칠 수 있으므로, 둘을 합쳐 칸을 넘길 때만 폭을 비례로 줄인다(그래도 서로 같은 폭).
+    box_gap = 5 * mm
+    cap_h = 9  # _draw_course_map 의 캡션 높이와 맞춘다
+    fallback_top_budget = col_h * 0.56
+
+    top_size = _image_size(img_path) if img_path else None
+    bottom_size = _image_size(green_img) if green_img else None
+
+    draw_w = left_w
+    if top_size and bottom_size:
+        top_natural = top_size[1] * left_w / top_size[0] + cap_h
+        bottom_natural = bottom_size[1] * left_w / bottom_size[0] + cap_h
+        needed = top_natural + box_gap + bottom_natural
+        if needed > col_h:
+            draw_w = left_w * (col_h / needed)
+        top_budget = top_size[1] * draw_w / top_size[0] + cap_h
+    elif top_size and not bottom_size:
+        top_natural = top_size[1] * left_w / top_size[0] + cap_h
+        if top_natural > col_h:
+            draw_w = left_w * (col_h / top_natural)
+        top_budget = top_size[1] * draw_w / top_size[0] + cap_h
     else:
-        diagram.draw_hole(c, MARGIN, col_y, left_w, col_h, hole, tee_key,
+        top_budget = fallback_top_budget  # 위가 개략도(벡터)면 넘칠 일이 없다
+
+    draw_x = MARGIN + (left_w - draw_w) / 2
+    top_y = col_bottom + col_h - top_budget
+
+    if img_path:
+        used = _draw_course_map(c, draw_x, top_y, draw_w, top_budget, img_path)
+        top_bottom = col_bottom + col_h - used
+    else:
+        diagram.draw_hole(c, MARGIN, top_y, left_w, top_budget, hole, tee_key,
+                          tees=course.tees, ref_tee=str(course.meta.get("hazard_ref_tee") or tee_key),
+                          show_scale_note=False)
+        top_bottom = top_y
+
+    bottom_top = top_bottom - box_gap
+    bottom_h = bottom_top - col_bottom
+
+    if green_img:
+        _draw_course_map(c, draw_x, col_bottom, draw_w, bottom_h, green_img,
+                          caption="그린 상세도 (골프장 제공)")
+    else:
+        _sub(c, "홀공략", MARGIN, bottom_top + 3)
+        diagram.draw_hole(c, MARGIN, col_bottom, left_w, bottom_h - 12, hole, tee_key,
                           tees=course.tees, ref_tee=str(course.meta.get("hazard_ref_tee") or tee_key))
 
     y = bar_y - 9 * mm
-    # 스코어 기록칸은 페이지 맨 아래 고정. 오른쪽 단 글은 도면 아래로도 흘러도 되므로
-    # 한계는 도면 바닥이 아니라 기록칸 윗변이다.
-    box_top = 42 * mm
-    floor = box_top + 4 * mm
+    # 오른쪽 단 글의 하단 한계 — 기록칸이 없으니 페이지 여백까지 그대로 쓴다.
+    floor = MARGIN + 4 * mm
 
     # 항목이 많을수록 조금씩 조여서 한 페이지에 담는다
     dense = level == "both"
     fs = 7.9 if dense else 8.3          # 본문 크기
     ld = 10.2 if dense else 10.8        # 줄 간격
-
-    # 오른쪽 위: 그린 상세도
-    if green_img:
-        y = _draw_green_map(c, text_x, y, text_w, (36 if dense else 46) * mm, green_img) - 8
 
     # 그린 거리
     y = _sub(c, "그린", text_x, y)
@@ -664,11 +732,10 @@ def scoremap_page(c: Canvas, course: Course, hole: Hole, tee_key: str, level: st
         c.drawString(text_x, y, "* 거리와 클럽 설정값에서 자동 계산된 배분입니다.")
         y -= 11
 
-    if hole.note and not img_path and y > floor + 40:
+    if hole.note and y > floor + 40:
         y = _sub(c, "골프장 코스 안내", text_x, y)
         y = para(c, hole.note, text_x, y, text_w, size=7.8, leading=10.4, color=C_MUTED)
 
-    _score_boxes(c, MARGIN, box_top, PAGE_W - 2 * MARGIN)
     _footer(c, f"{course.meta.get('name', '')} · {nine} {hole.hole}번홀")
     c.showPage()
 
@@ -890,7 +957,15 @@ def _green_image_path(hole: Hole, course: Course | None = None) -> str | None:
     return _resolve(hole.green_image) or (_by_convention(course, hole, "_green") if course else None)
 
 
-def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: str) -> float:
+def _image_size(path: str) -> tuple[float, float] | None:
+    try:
+        return ImageReader(path).getSize()
+    except Exception:
+        return None
+
+
+def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: str,
+                      caption: str = "실제 코스안내도 (골프장 제공)") -> float:
     """코스안내도 이미지를 비율 유지해 넣고, 실제로 사용한 높이를 돌려준다."""
     try:
         reader = ImageReader(path)
@@ -902,20 +977,18 @@ def _draw_course_map(c: Canvas, x: float, y: float, w: float, h: float, path: st
         return h
 
     cap_h = 9
-    box_h = h - cap_h
-    scale = min(w / iw, box_h / ih)
-    dw, dh = iw * scale, ih * scale
-    dx = x + (w - dw) / 2
+    # 폭을 항상 꽉 채운다 — 위/아래 이미지의 가로폭을 맞추고, 사진 속 숫자도 커진다.
+    # (세로는 비율대로 늘어나며, 실제로 쓴 높이는 반환값으로 알려준다)
+    scale = w / iw
+    dw, dh = w, ih * scale
+    dx = x
     dy = y + h - dh
 
     c.drawImage(reader, dx, dy, dw, dh, preserveAspectRatio=True, anchor="n", mask="auto")
-    c.setStrokeColor(C_LINE)
-    c.setLineWidth(0.6)
-    c.rect(dx, dy, dw, dh, stroke=1, fill=0)
 
     c.setFont(fonts.regular(), 6)
     c.setFillColor(C_MUTED)
-    c.drawString(x + 1, dy - 7, "실제 코스안내도 (골프장 제공)")
+    c.drawString(x + 1, dy - 7, caption)
     return dh + cap_h
 
 

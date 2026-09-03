@@ -194,9 +194,12 @@ def draw_hole(
         # 거리 마커 (그린 기준 100/150/200m) — 랜딩존과 겹치는 것은 건너뛴다
         _draw_distance_marks(c, pts, length, P, scale, horiz, avoid=landing)
 
-    # 해저드
+    # 해저드 — 좌표(start/end)가 없는 것들은 겹쳐 보이지 않도록 순서대로 흩어 놓는다.
+    no_coord = [hz for hz in hole.hazards if hz.start is None]
+    stagger = {id(hz): i for i, hz in enumerate(no_coord)}
     for hz in hole.hazards:
-        _draw_hazard(c, hz, pts, length, P, scale, horiz)
+        _draw_hazard(c, hz, pts, length, P, scale, horiz,
+                     stagger_idx=stagger.get(id(hz)), stagger_n=len(no_coord))
 
     # 실제 야디지북처럼 해저드마다 티별 캐리 거리 상자를 얹는다
     if tees and has_data:
@@ -303,13 +306,20 @@ def _draw_distance_marks(c, pts, length, P, scale, horiz, avoid: float | None = 
         c.drawCentredString(bx, by - 1.9, str(to_green))
 
 
-def _draw_hazard(c, hz, pts, length, P, scale, horiz) -> None:
+def _draw_hazard(c, hz, pts, length, P, scale, horiz, stagger_idx=None, stagger_n=1) -> None:
     # 미터 공간의 +x 는 페이지 오른쪽. offset_polyline(+d) 도 오른쪽으로 밀린다.
     side_sign = {"left": -1.0, "right": 1.0, "center": 0.0}.get(hz.side, 0.0)
     if hz.side.startswith("greenside"):
         side_sign = -1.0 if hz.side.endswith("left") else 1.0
 
-    start = hz.start if hz.start is not None else length * 0.55
+    # 좌표(start/end)가 없는 해저드는 전부 같은 자리에 겹치므로, 몇 번째인지에 따라
+    # 홀 진행 방향으로 흩어 배치한다 — 실제 위치는 아니지만 라벨이 겹쳐 읽지 못하는 것보다는 낫다.
+    if stagger_idx is not None and stagger_n > 1:
+        frac = 0.32 + 0.5 * (stagger_idx / (stagger_n - 1))
+    else:
+        frac = 0.55
+
+    start = hz.start if hz.start is not None else length * frac
     end = hz.end if hz.end is not None else start + 25
     if hz.side == "front":
         start, end = length - 30, length - 15
@@ -365,6 +375,27 @@ def _draw_hazard(c, hz, pts, length, P, scale, horiz) -> None:
         c.setStrokeColor(C_SAND_EDGE)
     c.setLineWidth(0.5)
     c.ellipse(cxp - ex, cyp - ey, cxp + ex, cyp + ey, stroke=1, fill=1)
+
+    # 실제 코스안내도에 인쇄된 잔여거리 숫자는 축소되면 읽기 어려우므로,
+    # 정확한 좌표(start/end)가 없어 캐리박스를 못 그리는 해저드는 원문 표기를
+    # 별도 라벨로 다시 그려 가독성을 보완한다.
+    if hz.start is None and hz.note:
+        _draw_hazard_label(c, hz.note, cxp, cyp - ey)
+
+
+def _draw_hazard_label(c, text: str, x: float, y: float) -> None:
+    label = text if len(text) <= 30 else text[:29] + "…"
+    size = 5.3
+    c.setFont(fonts.regular(), size)
+    w = c.stringWidth(label, fonts.regular(), size)
+    pad = 1.6
+    box_y = y - 8.5
+    c.setFillColor(HexColor("#FFFFFFD0"))
+    c.setStrokeColor(HexColor("#00000022"))
+    c.setLineWidth(0.3)
+    c.roundRect(x - w / 2 - pad, box_y - 3.4, w + pad * 2, 6.4, 1.4, stroke=1, fill=1)
+    c.setFillColor(C_INK)
+    c.drawCentredString(x, box_y - 1.6, label)
 
 
 def _draw_carry_box(c, hz, hole, pts, length, P, scale, horiz, tees, ref_tee, bounds) -> None:
