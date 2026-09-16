@@ -1,0 +1,35 @@
+# 깨비봇용 .gitignore 템플릿
+# 깨비봇 폴더에 `.gitignore` 라는 이름으로 복사해서 쓴다.
+
+# ── 비밀정보 (절대 커밋 금지) ──────────────────────────
+.env
+.env.*
+*.key
+*.pem
+secrets.py
+config_local.py
+credentials.json
+api_keys.txt
+
+# ── 파이썬 ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+*.egg-info/
+
+# ── 엑셀 임시파일 ─────────────────────────────────────
+~$*.xlsx
+~$*.xls
+
+# ── 로그·캐시 ─────────────────────────────────────────
+*.log
+logs/
+cache/
+data/raw/
+
+# ── Claude Code 로컬 설정 ─────────────────────────────
+# settings.json(공유용)은 커밋하고, local만 제외한다
+.claude/settings.local.json
